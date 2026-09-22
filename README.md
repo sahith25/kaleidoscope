@@ -148,7 +148,27 @@ just preview
 just lint
 ```
 
-### 6. Clean Build Artifacts
+### 6. Trigger Remote GitHub Actions Deploy
+```bash
+just deploy
+```
+
+### 7. View Live Deployment Status
+```bash
+just deploy-status
+```
+
+### 8. Open Live Web App in Browser
+```bash
+just open-live
+```
+
+### 9. Build, Commit & Push (Triggers Auto-Deploy)
+```bash
+just push msg="add new feature"
+```
+
+### 10. Clean Build Artifacts
 ```bash
 just clean
 ```

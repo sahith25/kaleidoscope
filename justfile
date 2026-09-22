@@ -24,6 +24,25 @@ preview:
 lint:
     npm run build
 
+# Trigger GitHub Actions deployment workflow remotely
+deploy:
+    gh workflow run deploy.yml
+
+# View GitHub Actions deployment status
+deploy-status:
+    gh run list --workflow="deploy.yml"
+
+# Open live deployed website in browser
+open-live:
+    open https://sahith25.github.io/kaleidoscope/
+
+# Build, commit, and push to trigger auto-deployment
+push msg="update":
+    npm run build
+    git add .
+    git commit -m "{{msg}}" || true
+    git push
+
 # Clean build artifacts
 clean:
     rm -rf dist node_modules
