@@ -76,8 +76,17 @@ export class KaleidoscopeEngine {
 
   setupInteractionListeners() {
     const onPointerDown = (e) => {
+      // Ignore if clicking on UI overlay controls
+      if (e.target !== this.canvas) return;
+
       this.isDragging = true;
+      try { this.canvas.setPointerCapture(e.pointerId); } catch(err) {}
+
       if (this.mediaManager.sourceType === 'draw') {
+        // Reset pan offset in Paint mode to keep drawing centered
+        this.targetPanOffset = { x: 0, y: 0 };
+        this.panOffset = { x: 0, y: 0 };
+
         const pt = this.getCanvasToSourceCoords(e.clientX, e.clientY);
         this.mediaManager.drawingSource.startStroke(pt.x, pt.y);
       } else {
@@ -87,6 +96,7 @@ export class KaleidoscopeEngine {
 
     const onPointerMove = (e) => {
       if (!this.isDragging) return;
+
       if (this.mediaManager.sourceType === 'draw') {
         const pt = this.getCanvasToSourceCoords(e.clientX, e.clientY);
         this.mediaManager.drawingSource.moveStroke(pt.x, pt.y);
@@ -96,32 +106,29 @@ export class KaleidoscopeEngine {
       }
     };
 
-    const onPointerUp = () => {
-      this.isDragging = false;
-      if (this.mediaManager.sourceType === 'draw') {
-        this.mediaManager.drawingSource.endStroke();
+    const onPointerUp = (e) => {
+      if (this.isDragging) {
+        this.isDragging = false;
+        try { this.canvas.releasePointerCapture(e.pointerId); } catch(err) {}
+
+        if (this.mediaManager.sourceType === 'draw') {
+          this.mediaManager.drawingSource.endStroke();
+        }
       }
     };
 
     // Scroll wheel zoom
     const onWheel = (e) => {
+      if (e.target !== this.canvas) return;
       e.preventDefault();
       const delta = e.deltaY * -0.0015;
       this.zoomScale = Math.max(0.2, Math.min(4.0, this.zoomScale + delta));
     };
 
-    this.canvas.addEventListener('mousedown', onPointerDown);
-    window.addEventListener('mousemove', onPointerMove);
-    window.addEventListener('mouseup', onPointerUp);
-
-    this.canvas.addEventListener('touchstart', (e) => {
-      if (e.touches.length === 1) onPointerDown(e.touches[0]);
-    });
-    window.addEventListener('touchmove', (e) => {
-      if (this.isDragging && e.touches.length === 1) onPointerMove(e.touches[0]);
-    });
-    window.addEventListener('touchend', onPointerUp);
-
+    this.canvas.addEventListener('pointerdown', onPointerDown);
+    this.canvas.addEventListener('pointermove', onPointerMove);
+    this.canvas.addEventListener('pointerup', onPointerUp);
+    this.canvas.addEventListener('pointercancel', onPointerUp);
     this.canvas.addEventListener('wheel', onWheel, { passive: false });
   }
 
