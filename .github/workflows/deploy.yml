@@ -1,10 +1,7 @@
 name: Deploy Digital Kaleidoscope to GitHub Pages
 
 on:
-  push:
-    branches:
-      - main
-  workflow_dispatch: # Allows manual trigger on-demand via GitHub Actions UI
+  workflow_dispatch: # Manual trigger on-demand only
 
 # Grant permissions required for GitHub Pages deployment
 permissions:

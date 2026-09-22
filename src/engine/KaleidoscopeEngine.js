@@ -57,20 +57,40 @@ export class KaleidoscopeEngine {
   }
 
   getCanvasToSourceCoords(clientX, clientY) {
-    const w = window.innerWidth;
-    const h = window.innerHeight;
+    const rect = this.canvas.getBoundingClientRect();
+    const cx = rect.width / 2;
+    const cy = rect.height / 2;
+
+    const dx = clientX - rect.left - cx;
+    const dy = clientY - rect.top - cy;
+
+    const r = Math.hypot(dx, dy);
+    const theta = Math.atan2(dy, dx);
+    const deltaAngle = theta - this.rotationAngle;
+
+    const stepAngle = (Math.PI * 2) / this.slices;
+    const twoPi = Math.PI * 2;
+
+    // Normalize deltaAngle into [0, 2PI)
+    const normAngle = (deltaAngle % twoPi + twoPi) % twoPi;
+
+    // Find closest slice index (centered at i * stepAngle)
+    const i = Math.floor((normAngle + stepAngle / 2) / stepAngle) % this.slices;
+    const centerAngle = i * stepAngle;
+    const alpha = normAngle - centerAngle;
+
+    // Invert angle for mirrored odd slices
+    const phi = (this.mirror && (i % 2 === 1)) ? -alpha : alpha;
+
+    const curZoom = Math.max(0.1, this.zoomScale);
+    const r_p = r / curZoom;
+
     const srcW = this.sourceCanvas.width;
     const srcH = this.sourceCanvas.height;
 
-    const dx = clientX - w / 2 - this.panOffset.x;
-    const dy = clientY - h / 2 - this.panOffset.y;
-
-    const r = Math.hypot(dx, dy);
-    const a = Math.atan2(dy, dx) - this.rotationAngle;
-
     return {
-      x: srcW / 2 + (r * Math.cos(a)) / Math.max(0.1, this.zoomScale),
-      y: srcH / 2 + (r * Math.sin(a)) / Math.max(0.1, this.zoomScale)
+      x: srcW / 2 + r_p * Math.cos(phi) - this.panOffset.x,
+      y: srcH / 2 + r_p * Math.sin(phi) - this.panOffset.y
     };
   }
 
@@ -140,6 +160,13 @@ export class KaleidoscopeEngine {
         const factor = curDist / initialPinchDist;
         this.zoomScale = Math.max(0.2, Math.min(4.0, initialZoomScale * factor));
       }
+    };
+
+    const onWheel = (e) => {
+      if (e.target !== this.canvas) return;
+      e.preventDefault();
+      const delta = e.deltaY * -0.0015;
+      this.zoomScale = Math.max(0.2, Math.min(4.0, this.zoomScale + delta));
     };
 
     const onTouchEnd = () => {

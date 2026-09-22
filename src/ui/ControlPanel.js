@@ -182,25 +182,24 @@ export class ControlPanel {
     const srcWebcam = document.getElementById('srcWebcam');
     const fileInput = document.getElementById('fileInput');
     const drawControls = document.getElementById('drawControls');
+    const cameraControls = document.getElementById('cameraControls');
+    const btnFlipCamera = document.getElementById('btnFlipCamera');
 
-    const updateSrcButtons = (activeBtn, isDraw = false) => {
+    const updateSrcButtons = (activeBtn, mode = 'generative') => {
       [srcGenerative, srcDraw, srcImage, srcWebcam].forEach(btn => btn.classList.remove('active'));
       activeBtn.classList.add('active');
-      if (isDraw) {
-        drawControls.classList.remove('hidden');
-      } else {
-        drawControls.classList.add('hidden');
-      }
+      if (drawControls) drawControls.classList.toggle('hidden', mode !== 'draw');
+      if (cameraControls) cameraControls.classList.toggle('hidden', mode !== 'webcam');
     };
 
     srcGenerative.addEventListener('click', () => {
       this.engine.mediaManager.setSourceType('generative');
-      updateSrcButtons(srcGenerative, false);
+      updateSrcButtons(srcGenerative, 'generative');
     });
 
     srcDraw.addEventListener('click', () => {
       this.engine.mediaManager.setSourceType('draw');
-      updateSrcButtons(srcDraw, true);
+      updateSrcButtons(srcDraw, 'draw');
     });
 
     srcImage.addEventListener('click', () => {
@@ -210,15 +209,21 @@ export class ControlPanel {
     fileInput.addEventListener('change', async (e) => {
       if (e.target.files && e.target.files[0]) {
         const ok = await this.engine.mediaManager.setSourceType('image', e.target.files[0]);
-        if (ok) updateSrcButtons(srcImage, false);
+        if (ok) updateSrcButtons(srcImage, 'image');
       }
     });
 
     srcWebcam.addEventListener('click', async () => {
       const ok = await this.engine.mediaManager.setSourceType('webcam');
-      if (ok) updateSrcButtons(srcWebcam, false);
+      if (ok) updateSrcButtons(srcWebcam, 'webcam');
       else alert("Webcam access requested but could not be initialized.");
     });
+
+    if (btnFlipCamera) {
+      btnFlipCamera.addEventListener('click', async () => {
+        await this.engine.mediaManager.toggleCameraFacing();
+      });
+    }
 
     // Paint / Draw Controls
     this.bindSlider('sliderBrushSize', 'valBrushSize', (val) => {
@@ -289,7 +294,7 @@ export class ControlPanel {
 
         const presetKey = btn.getAttribute('data-preset');
         if (this.presets[presetKey]) {
-          this.applyPreset(this.presets[presetKey]);
+          this.applyPreset(presetKey, this.presets[presetKey]);
         }
       });
     });
@@ -306,7 +311,21 @@ export class ControlPanel {
     });
   }
 
-  applyPreset(preset) {
+  applyPreset(presetKey, preset) {
+    if (this.engine.mediaManager.sourceType === 'draw') {
+      this.engine.mediaManager.setSourceType('generative');
+      const srcGenerative = document.getElementById('srcGenerative');
+      const srcDraw = document.getElementById('srcDraw');
+      const srcImage = document.getElementById('srcImage');
+      const srcWebcam = document.getElementById('srcWebcam');
+      const drawControls = document.getElementById('drawControls');
+      if (srcGenerative && srcDraw) {
+        [srcGenerative, srcDraw, srcImage, srcWebcam].forEach(btn => btn?.classList.remove('active'));
+        srcGenerative.classList.add('active');
+      }
+      if (drawControls) drawControls.classList.add('hidden');
+    }
+
     this.engine.slices = preset.slices;
     this.engine.mirror = preset.mirror;
     this.engine.spinSpeed = preset.spin;
@@ -315,6 +334,7 @@ export class ControlPanel {
     this.engine.trailEffect = preset.trail;
     this.engine.colorShiftRate = preset.colorShift;
     this.engine.generativeSource.setComplexity(preset.complexity);
+    this.engine.generativeSource.setPalette(presetKey);
 
     // Sync UI elements
     this.updateUIVal('sliderSymmetry', 'valSymmetry', preset.slices);

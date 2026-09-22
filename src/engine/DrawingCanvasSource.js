@@ -35,10 +35,15 @@ export class DrawingCanvasSource {
   }
 
   resize(w, h) {
-    // Preserve existing drawing contents during resize
+    if (w <= 0 || h <= 0) return;
+    const oldW = this.canvas.width;
+    const oldH = this.canvas.height;
+    if (oldW === w && oldH === h) return;
+
+    // Preserve existing drawing contents centered during resize
     const tempCanvas = document.createElement('canvas');
-    tempCanvas.width = this.canvas.width;
-    tempCanvas.height = this.canvas.height;
+    tempCanvas.width = oldW;
+    tempCanvas.height = oldH;
     const tempCtx = tempCanvas.getContext('2d');
     tempCtx.drawImage(this.canvas, 0, 0);
 
@@ -46,7 +51,9 @@ export class DrawingCanvasSource {
     this.canvas.height = h;
 
     this.initCanvas();
-    this.ctx.drawImage(tempCanvas, 0, 0, w, h);
+    const offsetX = (w - oldW) / 2;
+    const offsetY = (h - oldH) / 2;
+    this.ctx.drawImage(tempCanvas, offsetX, offsetY);
   }
 
   clear() {

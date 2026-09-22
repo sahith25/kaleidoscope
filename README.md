@@ -13,8 +13,9 @@ flowchart TD
     
     subgraph "Input Pattern Sources (MediaManager.js)"
         C1["✨ Procedural Generative Particles (GenerativeParticleSource.js)"]
-        C2["🖼️ Custom Image Upload / Drag & Drop"]
-        C3["📹 Live Webcam Video Stream"]
+        C2["🖌️ Interactive Paint Canvas (DrawingCanvasSource.js)"]
+        C3["🖼️ Custom Image Upload / Drag & Drop"]
+        C4["📹 Live Webcam Video Stream"]
     end
     
     subgraph "Audio Analysis (AudioAnalyzer.js)"
@@ -25,6 +26,7 @@ flowchart TD
     C1 --> E["🎨 Offscreen Source Canvas Buffer"]
     C2 --> E
     C3 --> E
+    C4 --> E
     
     E --> F["⚙️ Kaleidoscope Engine (KaleidoscopeEngine.js)"]
     B --> F
@@ -109,6 +111,7 @@ kaleidoscope/
     ├── engine/
     │   ├── KaleidoscopeEngine.js       # Core N-fold symmetry mirror renderer
     │   ├── GenerativeParticleSource.js # Procedural shape & particle generator
+    │   ├── DrawingCanvasSource.js      # Interactive paint & stroke canvas manager
     │   ├── AudioAnalyzer.js            # Web Audio API microphone frequency analyzer
     │   └── MediaManager.js             # Image upload & webcam video stream manager
     └── ui/

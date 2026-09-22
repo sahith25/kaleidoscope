@@ -22,7 +22,6 @@ export class MediaManager {
     this.sourceType = type;
 
     if (type === 'draw') {
-      this.drawingSource.initCanvas();
       return true;
     } else if (type === 'image' && file) {
       return await this.loadImageFromFile(file);
@@ -49,11 +48,26 @@ export class MediaManager {
     });
   }
 
-  async startWebcam() {
+  async startWebcam(facingMode = 'environment') {
+    this.stopWebcam();
+
+    this.currentFacingMode = facingMode;
+    const constraints = {
+      video: {
+        facingMode: { ideal: facingMode },
+        width: { ideal: 1280 },
+        height: { ideal: 720 }
+      }
+    };
+
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { width: { ideal: 1280 }, height: { ideal: 720 } }
-      });
+      let stream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia(constraints);
+      } catch (e1) {
+        stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      }
+
       this.webcamStream = stream;
 
       const video = document.createElement('video');
@@ -69,6 +83,11 @@ export class MediaManager {
       this.sourceType = 'generative';
       return false;
     }
+  }
+
+  async toggleCameraFacing() {
+    const nextMode = this.currentFacingMode === 'environment' ? 'user' : 'environment';
+    return await this.startWebcam(nextMode);
   }
 
   stopWebcam() {

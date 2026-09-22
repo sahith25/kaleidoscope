@@ -11,9 +11,44 @@ export class GenerativeParticleSource {
     this.time = 0;
     this.complexity = 15;
     this.hueOffset = 0;
+    this.paletteTheme = 'cosmic';
+    this.paletteHues = [270, 290, 310, 250];
 
     this.resize(800, 800);
     this.initParticles();
+  }
+
+  setPalette(theme) {
+    this.paletteTheme = theme;
+    switch(theme) {
+      case 'cyber':
+        this.paletteHues = [180, 195, 300, 320];
+        break;
+      case 'stainedGlass':
+        this.paletteHues = [215, 350, 45, 140];
+        break;
+      case 'liquidGold':
+        this.paletteHues = [40, 45, 35, 50];
+        break;
+      case 'psychedelic':
+        this.paletteHues = null; // full rainbow spectrum
+        break;
+      case 'crystalCave':
+        this.paletteHues = [175, 190, 205, 160];
+        break;
+      case 'cosmic':
+      default:
+        this.paletteHues = [270, 290, 310, 250];
+        break;
+    }
+  }
+
+  getHue(seed = 0) {
+    if (!this.paletteHues) {
+      return (this.hueOffset + seed) % 360;
+    }
+    const idx = Math.floor(Math.abs(seed + this.hueOffset * 0.05)) % this.paletteHues.length;
+    return this.paletteHues[idx];
   }
 
   resize(w, h) {
@@ -35,7 +70,7 @@ export class GenerativeParticleSource {
         vy: (Math.random() - 0.5) * 1.5,
         radius: Math.random() * 25 + 5,
         shape: Math.floor(Math.random() * 4), // 0: circle, 1: star/polygon, 2: ring, 3: line
-        hue: Math.random() * 360,
+        hueSeed: i * 27,
         speed: (Math.random() - 0.5) * 0.03,
         angle: Math.random() * Math.PI * 2,
         orbitRadius: Math.random() * (w / 3) + 20
@@ -64,10 +99,10 @@ export class GenerativeParticleSource {
 
     // Clear background with soft gradient swirl
     const bgGrad = this.ctx.createRadialGradient(cx, cy, 10, cx, cy, w / 1.5);
-    const bgHue = (this.hueOffset * 0.2) % 360;
+    const bgHue = this.getHue(0);
     bgGrad.addColorStop(0, `hsla(${bgHue}, 80%, 15%, 1)`);
-    bgGrad.addColorStop(0.5, `hsla(${(bgHue + 60) % 360}, 70%, 8%, 1)`);
-    bgGrad.addColorStop(1, `hsla(${(bgHue + 120) % 360}, 90%, 3%, 1)`);
+    bgGrad.addColorStop(0.5, `hsla(${(bgHue + 40) % 360}, 70%, 8%, 1)`);
+    bgGrad.addColorStop(1, `hsla(${(bgHue + 80) % 360}, 90%, 3%, 1)`);
     
     this.ctx.fillStyle = bgGrad;
     this.ctx.fillRect(0, 0, w, h);
@@ -79,7 +114,7 @@ export class GenerativeParticleSource {
     const ringCount = 5;
     for (let r = 0; r < ringCount; r++) {
       const radius = (r + 1) * 45 + Math.sin(this.time * 2 + r) * 15 + bass * 40;
-      const ringHue = (this.hueOffset + r * 40) % 360;
+      const ringHue = this.getHue(r * 45);
 
       this.ctx.save();
       this.ctx.rotate(this.time * (r % 2 === 0 ? 0.3 : -0.3) + r);
@@ -114,7 +149,7 @@ export class GenerativeParticleSource {
       p.y = cy + Math.sin(p.angle) * curRadius;
 
       const pRadius = p.radius * (1 + (treble * 0.8));
-      const pHue = (p.hue + this.hueOffset) % 360;
+      const pHue = this.getHue(p.hueSeed);
 
       this.ctx.save();
       this.ctx.translate(p.x, p.y);
