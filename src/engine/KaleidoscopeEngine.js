@@ -65,9 +65,12 @@ export class KaleidoscopeEngine {
     const dx = clientX - w / 2 - this.panOffset.x;
     const dy = clientY - h / 2 - this.panOffset.y;
 
+    const r = Math.hypot(dx, dy);
+    const a = Math.atan2(dy, dx) - this.rotationAngle;
+
     return {
-      x: srcW / 2 + dx / Math.max(0.1, this.zoomScale),
-      y: srcH / 2 + dy / Math.max(0.1, this.zoomScale)
+      x: srcW / 2 + (r * Math.cos(a)) / Math.max(0.1, this.zoomScale),
+      y: srcH / 2 + (r * Math.sin(a)) / Math.max(0.1, this.zoomScale)
     };
   }
 

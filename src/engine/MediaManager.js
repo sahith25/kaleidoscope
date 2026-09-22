@@ -21,7 +21,10 @@ export class MediaManager {
 
     this.sourceType = type;
 
-    if (type === 'image' && file) {
+    if (type === 'draw') {
+      this.drawingSource.initCanvas();
+      return true;
+    } else if (type === 'image' && file) {
       return await this.loadImageFromFile(file);
     } else if (type === 'webcam') {
       return await this.startWebcam();
