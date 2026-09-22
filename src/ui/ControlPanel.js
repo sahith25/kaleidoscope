@@ -43,9 +43,9 @@ export class ControlPanel {
       cyber: {
         slices: 8,
         mirror: true,
-        spin: 1.5,
-        zoom: 1.8,
-        pulse: 0.6,
+        spin: 0.0,
+        zoom: 1.0,
+        pulse: 0.0,
         trail: 0.35,
         colorShift: 1.2,
         complexity: 25
@@ -53,9 +53,9 @@ export class ControlPanel {
       stainedGlass: {
         slices: 16,
         mirror: false,
-        spin: 0.3,
+        spin: 0.0,
         zoom: 1.0,
-        pulse: 0.1,
+        pulse: 0.0,
         trail: 0.0,
         colorShift: 0.1,
         complexity: 30
@@ -63,9 +63,9 @@ export class ControlPanel {
       liquidGold: {
         slices: 6,
         mirror: true,
-        spin: 0.5,
-        zoom: 1.5,
-        pulse: 0.4,
+        spin: 0.0,
+        zoom: 1.0,
+        pulse: 0.0,
         trail: 0.25,
         colorShift: 0.2,
         complexity: 10
@@ -73,9 +73,9 @@ export class ControlPanel {
       psychedelic: {
         slices: 24,
         mirror: true,
-        spin: 2.2,
-        zoom: 2.0,
-        pulse: 0.8,
+        spin: 0.0,
+        zoom: 1.0,
+        pulse: 0.0,
         trail: 0.4,
         colorShift: 1.8,
         complexity: 35
@@ -83,9 +83,9 @@ export class ControlPanel {
       crystalCave: {
         slices: 14,
         mirror: true,
-        spin: -0.6,
-        zoom: 1.4,
-        pulse: 0.2,
+        spin: 0.0,
+        zoom: 1.0,
+        pulse: 0.0,
         trail: 0.1,
         colorShift: 0.4,
         complexity: 20
