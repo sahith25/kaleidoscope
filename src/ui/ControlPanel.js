@@ -33,9 +33,9 @@ export class ControlPanel {
       cosmic: {
         slices: 12,
         mirror: true,
-        spin: 0.8,
-        zoom: 1.2,
-        pulse: 0.3,
+        spin: 0.0,
+        zoom: 1.0,
+        pulse: 0.0,
         trail: 0.15,
         colorShift: 0.5,
         complexity: 15

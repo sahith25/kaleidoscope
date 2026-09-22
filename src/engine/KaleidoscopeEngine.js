@@ -22,9 +22,9 @@ export class KaleidoscopeEngine {
     // Kaleidoscope State & Parameters
     this.slices = 12;
     this.mirror = true;
-    this.spinSpeed = 0.8;
-    this.zoomScale = 1.2;
-    this.zoomPulse = 0.3;
+    this.spinSpeed = 0.0;
+    this.zoomScale = 1.0;
+    this.zoomPulse = 0.0;
     this.trailEffect = 0.15;
     this.colorShiftRate = 0.5;
 
