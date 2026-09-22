@@ -1,13 +1,16 @@
 /**
  * MediaManager.js
- * Manages custom image uploads, webcam streaming, and procedural fallback canvases.
+ * Manages custom image uploads, webcam streaming, procedural generative canvas, and interactive drawing canvas.
  */
+import { DrawingCanvasSource } from './DrawingCanvasSource.js';
+
 export class MediaManager {
-  constructor() {
-    this.sourceType = 'generative'; // 'generative', 'image', 'webcam'
+  constructor(sourceCanvas) {
+    this.sourceType = 'generative'; // 'generative', 'draw', 'image', 'webcam'
     this.uploadedImage = null;
     this.webcamVideo = null;
     this.webcamStream = null;
+    this.drawingSource = new DrawingCanvasSource(sourceCanvas);
   }
 
   async setSourceType(type, file = null) {
@@ -78,8 +81,10 @@ export class MediaManager {
   }
 
   drawToCanvas(ctx, width, height, generativeSource, time) {
-    if (this.sourceType === 'image' && this.uploadedImage) {
-      // Draw image zoomed and centered
+    if (this.sourceType === 'draw') {
+      // Drawing canvas content is already in sourceCanvas
+      return;
+    } else if (this.sourceType === 'image' && this.uploadedImage) {
       const img = this.uploadedImage;
       const scale = Math.max(width / img.width, height / img.height);
       const nw = img.width * scale;
@@ -91,7 +96,6 @@ export class MediaManager {
       ctx.drawImage(img, nx, ny, nw, nh);
       ctx.restore();
     } else if (this.sourceType === 'webcam' && this.webcamVideo) {
-      // Draw video frame
       const vid = this.webcamVideo;
       if (vid.readyState >= vid.HAVE_CURRENT_DATA) {
         const scale = Math.max(width / vid.videoWidth, height / vid.videoHeight);
@@ -105,7 +109,7 @@ export class MediaManager {
         ctx.restore();
       }
     } else {
-      // Fallback: Generative Particle Source
+      // Generative Particle Source
       generativeSource.update(0.016);
     }
   }

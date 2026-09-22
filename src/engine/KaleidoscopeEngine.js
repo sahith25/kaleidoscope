@@ -17,7 +17,7 @@ export class KaleidoscopeEngine {
     // Engine Modules
     this.generativeSource = new GenerativeParticleSource(sourceCanvas);
     this.audioAnalyzer = new AudioAnalyzer();
-    this.mediaManager = new MediaManager();
+    this.mediaManager = new MediaManager(sourceCanvas);
 
     // Kaleidoscope State & Parameters
     this.slices = 12;
@@ -53,23 +53,51 @@ export class KaleidoscopeEngine {
 
     const sourceDim = Math.min(width, height) * 1.2;
     this.generativeSource.resize(sourceDim, sourceDim);
+    this.mediaManager.drawingSource.resize(sourceDim, sourceDim);
+  }
+
+  getCanvasToSourceCoords(clientX, clientY) {
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    const srcW = this.sourceCanvas.width;
+    const srcH = this.sourceCanvas.height;
+
+    const dx = clientX - w / 2 - this.panOffset.x;
+    const dy = clientY - h / 2 - this.panOffset.y;
+
+    return {
+      x: srcW / 2 + dx / Math.max(0.1, this.zoomScale),
+      y: srcH / 2 + dy / Math.max(0.1, this.zoomScale)
+    };
   }
 
   setupInteractionListeners() {
-    // Mouse / Touch Dragging to Pan Pattern
     const onPointerDown = (e) => {
       this.isDragging = true;
-      this.dragStart = { x: e.clientX - this.targetPanOffset.x, y: e.clientY - this.targetPanOffset.y };
+      if (this.mediaManager.sourceType === 'draw') {
+        const pt = this.getCanvasToSourceCoords(e.clientX, e.clientY);
+        this.mediaManager.drawingSource.startStroke(pt.x, pt.y);
+      } else {
+        this.dragStart = { x: e.clientX - this.targetPanOffset.x, y: e.clientY - this.targetPanOffset.y };
+      }
     };
 
     const onPointerMove = (e) => {
       if (!this.isDragging) return;
-      this.targetPanOffset.x = e.clientX - this.dragStart.x;
-      this.targetPanOffset.y = e.clientY - this.dragStart.y;
+      if (this.mediaManager.sourceType === 'draw') {
+        const pt = this.getCanvasToSourceCoords(e.clientX, e.clientY);
+        this.mediaManager.drawingSource.moveStroke(pt.x, pt.y);
+      } else {
+        this.targetPanOffset.x = e.clientX - this.dragStart.x;
+        this.targetPanOffset.y = e.clientY - this.dragStart.y;
+      }
     };
 
     const onPointerUp = () => {
       this.isDragging = false;
+      if (this.mediaManager.sourceType === 'draw') {
+        this.mediaManager.drawingSource.endStroke();
+      }
     };
 
     // Scroll wheel zoom

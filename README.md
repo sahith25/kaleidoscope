@@ -69,6 +69,7 @@ flowchart LR
 
 2. **Multi-Input Pattern Sources**:
    - **Generative Particle System**: Swirling concentric polygons, orbiting stars, glowing rings, and organic wave curves.
+   - **Interactive Paint / Draw Mode**: Paint live custom strokes directly onto the canvas with rainbow colors, custom color swatches, adjustable brush sizes, and instant N-fold radial symmetry projection.
    - **Custom Image Upload**: Load any photo (`PNG`, `JPG`, `WEBP`) via file picker or window drag-and-drop.
    - **Live Webcam Mirror**: Project live camera feed into real-time kaleidoscope mirror symmetry.
 

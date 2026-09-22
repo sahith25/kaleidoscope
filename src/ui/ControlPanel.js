@@ -23,6 +23,8 @@ import {
   Sun, 
   Layers, 
   MousePointer, 
+  Paintbrush,
+  Trash2,
   X 
 } from 'lucide';
 
@@ -119,6 +121,8 @@ export class ControlPanel {
         Sun, 
         Layers, 
         MousePointer, 
+        Paintbrush,
+        Trash2,
         X 
       }
     });
@@ -173,18 +177,30 @@ export class ControlPanel {
 
     // Source Selector Buttons
     const srcGenerative = document.getElementById('srcGenerative');
+    const srcDraw = document.getElementById('srcDraw');
     const srcImage = document.getElementById('srcImage');
     const srcWebcam = document.getElementById('srcWebcam');
     const fileInput = document.getElementById('fileInput');
+    const drawControls = document.getElementById('drawControls');
 
-    const updateSrcButtons = (activeBtn) => {
-      [srcGenerative, srcImage, srcWebcam].forEach(btn => btn.classList.remove('active'));
+    const updateSrcButtons = (activeBtn, isDraw = false) => {
+      [srcGenerative, srcDraw, srcImage, srcWebcam].forEach(btn => btn.classList.remove('active'));
       activeBtn.classList.add('active');
+      if (isDraw) {
+        drawControls.classList.remove('hidden');
+      } else {
+        drawControls.classList.add('hidden');
+      }
     };
 
     srcGenerative.addEventListener('click', () => {
       this.engine.mediaManager.setSourceType('generative');
-      updateSrcButtons(srcGenerative);
+      updateSrcButtons(srcGenerative, false);
+    });
+
+    srcDraw.addEventListener('click', () => {
+      this.engine.mediaManager.setSourceType('draw');
+      updateSrcButtons(srcDraw, true);
     });
 
     srcImage.addEventListener('click', () => {
@@ -194,15 +210,39 @@ export class ControlPanel {
     fileInput.addEventListener('change', async (e) => {
       if (e.target.files && e.target.files[0]) {
         const ok = await this.engine.mediaManager.setSourceType('image', e.target.files[0]);
-        if (ok) updateSrcButtons(srcImage);
+        if (ok) updateSrcButtons(srcImage, false);
       }
     });
 
     srcWebcam.addEventListener('click', async () => {
       const ok = await this.engine.mediaManager.setSourceType('webcam');
-      if (ok) updateSrcButtons(srcWebcam);
+      if (ok) updateSrcButtons(srcWebcam, false);
       else alert("Webcam access requested but could not be initialized.");
     });
+
+    // Paint / Draw Controls
+    this.bindSlider('sliderBrushSize', 'valBrushSize', (val) => {
+      this.engine.mediaManager.drawingSource.brushSize = parseInt(val, 10);
+      const valDisplay = document.getElementById('valBrushSize');
+      if (valDisplay) valDisplay.textContent = `${val}px`;
+    });
+
+    const colorBtns = document.querySelectorAll('.color-btn');
+    colorBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        colorBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const color = btn.getAttribute('data-color');
+        this.engine.mediaManager.drawingSource.brushColor = color;
+      });
+    });
+
+    const btnClearDraw = document.getElementById('btnClearDraw');
+    if (btnClearDraw) {
+      btnClearDraw.addEventListener('click', () => {
+        this.engine.mediaManager.drawingSource.clear();
+      });
+    }
 
     // Sliders binding
     this.bindSlider('sliderSymmetry', 'valSymmetry', (val) => {
