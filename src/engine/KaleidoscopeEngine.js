@@ -117,12 +117,33 @@ export class KaleidoscopeEngine {
       }
     };
 
-    // Scroll wheel zoom
-    const onWheel = (e) => {
+    let initialPinchDist = null;
+    let initialZoomScale = this.zoomScale;
+
+    const onTouchStart = (e) => {
       if (e.target !== this.canvas) return;
-      e.preventDefault();
-      const delta = e.deltaY * -0.0015;
-      this.zoomScale = Math.max(0.2, Math.min(4.0, this.zoomScale + delta));
+      if (e.touches.length === 2) {
+        this.isDragging = false;
+        const t1 = e.touches[0];
+        const t2 = e.touches[1];
+        initialPinchDist = Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
+        initialZoomScale = this.zoomScale;
+      }
+    };
+
+    const onTouchMove = (e) => {
+      if (e.touches.length === 2 && initialPinchDist) {
+        e.preventDefault();
+        const t1 = e.touches[0];
+        const t2 = e.touches[1];
+        const curDist = Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
+        const factor = curDist / initialPinchDist;
+        this.zoomScale = Math.max(0.2, Math.min(4.0, initialZoomScale * factor));
+      }
+    };
+
+    const onTouchEnd = () => {
+      initialPinchDist = null;
     };
 
     this.canvas.addEventListener('pointerdown', onPointerDown);
@@ -130,6 +151,11 @@ export class KaleidoscopeEngine {
     this.canvas.addEventListener('pointerup', onPointerUp);
     this.canvas.addEventListener('pointercancel', onPointerUp);
     this.canvas.addEventListener('wheel', onWheel, { passive: false });
+
+    this.canvas.addEventListener('touchstart', onTouchStart, { passive: true });
+    this.canvas.addEventListener('touchmove', onTouchMove, { passive: false });
+    this.canvas.addEventListener('touchend', onTouchEnd);
+    this.canvas.addEventListener('touchcancel', onTouchEnd);
   }
 
   update(dt) {
