@@ -42,28 +42,26 @@ export class AudioAnalyzer {
     return this.audioCtx;
   }
 
-  async toggleAudio() {
-    if (this.isActive) {
-      this.stop();
-      return false;
-    } else {
-      if (this.sourceMode === 'file' && this.audioElement && this.audioElement.src) {
-        return await this.playAudioFile();
-      } else if (this.sourceMode === 'system') {
-        return await this.startSystemAudio();
-      } else {
-        return await this.startMic();
-      }
-    }
-  }
-
   async startMic() {
     this.stop();
-    try {
-      this.ensureAudioContext();
+    // Synchronously initialize & resume AudioContext during user click gesture
+    this.ensureAudioContext();
 
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          echoCancellation: false,
+          noiseSuppression: false,
+          autoGainControl: false
+        }, 
+        video: false 
+      });
       this.microphoneStream = stream;
+
+      // Resume AudioContext again once permission is granted
+      if (this.audioCtx.state === 'suspended') {
+        await this.audioCtx.resume();
+      }
 
       this.micSource = this.audioCtx.createMediaStreamSource(stream);
       this.micSource.connect(this.analyser);
@@ -73,6 +71,7 @@ export class AudioAnalyzer {
       return true;
     } catch (err) {
       console.warn("AudioAnalyzer: Could not access microphone", err);
+      alert("Microphone access issue: " + (err.message || err.name || "Permission denied or mic unavailable"));
       this.stop();
       return false;
     }
@@ -84,6 +83,9 @@ export class AudioAnalyzer {
       alert("System audio capture is not supported on this browser. Try uploading an audio file instead.");
       return false;
     }
+
+    this.ensureAudioContext();
+
     try {
       const stream = await navigator.mediaDevices.getDisplayMedia({
         video: true,
@@ -102,7 +104,9 @@ export class AudioAnalyzer {
         return false;
       }
 
-      this.ensureAudioContext();
+      if (this.audioCtx.state === 'suspended') {
+        await this.audioCtx.resume();
+      }
 
       this.systemSource = this.audioCtx.createMediaStreamSource(new MediaStream(audioTracks));
       this.systemSource.connect(this.analyser);
@@ -123,9 +127,9 @@ export class AudioAnalyzer {
 
   async loadAudioFile(file) {
     this.stop();
-    try {
-      this.ensureAudioContext();
+    this.ensureAudioContext();
 
+    try {
       if (!this.audioElement) {
         this.audioElement = new Audio();
         this.audioElement.crossOrigin = 'anonymous';
