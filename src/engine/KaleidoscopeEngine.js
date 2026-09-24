@@ -203,7 +203,7 @@ export class KaleidoscopeEngine {
     if (this.mediaManager.sourceType === 'generative') {
       this.generativeSource.update(dt, audio);
     } else {
-      if (this.mediaManager.sourceType === 'draw' && this.autoPaintAudio && audio.volume > 0.01) {
+      if (this.mediaManager.sourceType === 'draw' && this.autoPaintAudio) {
         const srcW = this.sourceCanvas.width;
         const srcH = this.sourceCanvas.height;
         const cx = srcW / 2;
