@@ -406,7 +406,7 @@ export class KaleidoscopeEngine {
     if (this.isRecording) return false;
 
     try {
-      const canvasStream = this.canvas.captureStream ? this.canvas.captureStream(60) : null;
+      const canvasStream = this.canvas.captureStream ? this.canvas.captureStream(120) : null;
       if (!canvasStream) {
         alert("Canvas stream capture is not supported in this browser.");
         return false;
