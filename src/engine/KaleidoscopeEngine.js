@@ -223,6 +223,7 @@ export class KaleidoscopeEngine {
             targetY: cy,
             phase1: 0,
             phase2: 0,
+            phase3: 0,
             currentSpread: 1.0
           };
         }
@@ -231,8 +232,13 @@ export class KaleidoscopeEngine {
         const speedMult = 0.6 + (audio.mid * 1.2);
         this.virtualHand.phase1 += dt * 0.7 * speedMult;
         this.virtualHand.phase2 += dt * 1.3 * speedMult;
+        this.virtualHand.phase3 += dt * 0.4 * speedMult;
 
-        const wanderRadius = srcW * 0.28;
+        // Modulate radial distance dynamically (sweeps from 0% at center to 30% canvas width)
+        const baseWander = srcW * 0.28;
+        const radialFactor = Math.abs(Math.sin(this.virtualHand.phase3)); // 0.0 to 1.0
+        const wanderRadius = baseWander * radialFactor;
+
         this.virtualHand.targetX = cx + Math.cos(this.virtualHand.phase1) * wanderRadius + Math.sin(this.virtualHand.phase2) * (wanderRadius * 0.35);
         this.virtualHand.targetY = cy + Math.sin(this.virtualHand.phase1 * 1.2) * wanderRadius + Math.cos(this.virtualHand.phase2 * 0.85) * (wanderRadius * 0.35);
         
