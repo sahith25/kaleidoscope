@@ -111,7 +111,7 @@ export class KaleidoscopeEngine {
         this.panOffset = { x: 0, y: 0 };
 
         const pt = this.getCanvasToSourceCoords(e.clientX, e.clientY);
-        this.mediaManager.drawingSource.startStroke(pt.x, pt.y);
+        this.mediaManager.drawingSource.startStroke(pt.x, pt.y, e.pointerId);
       } else {
         this.dragStart = { x: e.clientX - this.targetPanOffset.x, y: e.clientY - this.targetPanOffset.y };
       }
@@ -122,7 +122,7 @@ export class KaleidoscopeEngine {
 
       if (this.mediaManager.sourceType === 'draw') {
         const pt = this.getCanvasToSourceCoords(e.clientX, e.clientY);
-        this.mediaManager.drawingSource.moveStroke(pt.x, pt.y);
+        this.mediaManager.drawingSource.moveStroke(pt.x, pt.y, e.pointerId);
       } else {
         this.targetPanOffset.x = e.clientX - this.dragStart.x;
         this.targetPanOffset.y = e.clientY - this.dragStart.y;
@@ -135,7 +135,7 @@ export class KaleidoscopeEngine {
         try { this.canvas.releasePointerCapture(e.pointerId); } catch(err) {}
 
         if (this.mediaManager.sourceType === 'draw') {
-          this.mediaManager.drawingSource.endStroke();
+          this.mediaManager.drawingSource.endStroke(e.pointerId);
         }
       }
     };
@@ -261,7 +261,7 @@ export class KaleidoscopeEngine {
           const fx = this.virtualHand.x + rx;
           const fy = this.virtualHand.y + ry;
 
-          this.mediaManager.drawingSource.moveStroke(fx, fy, id + 1);
+          this.mediaManager.drawingSource.moveStroke(fx, fy, 1001 + id);
         });
       }
 
