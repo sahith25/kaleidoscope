@@ -164,9 +164,6 @@ export class ControlPanel {
     btnSnapshot.addEventListener('click', () => this.engine.takeSnapshot());
 
     // Audio Elements & Controls
-    const btnToggleAudio = document.getElementById('btnToggleAudio');
-    const iconMic = document.getElementById('iconMic');
-    const labelAudio = document.getElementById('labelAudio');
     const audioStateBadge = document.getElementById('audioStateBadge');
 
     const audioSrcOff = document.getElementById('audioSrcOff');
@@ -178,9 +175,8 @@ export class ControlPanel {
     const songFileName = document.getElementById('songFileName');
     const btnPlayPauseSong = document.getElementById('btnPlayPauseSong');
 
-    const updateAudioUI = (activeMode = 'off', labelText = 'Audio Off') => {
+    const updateAudioUI = (activeMode = 'off') => {
       const isActive = activeMode !== 'off';
-      btnToggleAudio.classList.toggle('active', isActive);
 
       [audioSrcOff, audioSrcMic, audioSrcFile, audioSrcSystem].forEach(btn => btn?.classList.remove('active'));
 
@@ -195,28 +191,8 @@ export class ControlPanel {
           isActive ? 'bg-purple-900/60 text-purple-300 border border-purple-500/30' : 'bg-slate-800 text-slate-400'
         }`;
       }
-
-      if (isActive) {
-        iconMic.setAttribute('data-lucide', 'mic');
-        labelAudio.textContent = labelText;
-      } else {
-        iconMic.setAttribute('data-lucide', 'mic-off');
-        labelAudio.textContent = 'Audio Off';
-      }
       this.initLucideIcons();
     };
-
-    // Header Toggle Button: One-click turn on / turn off
-    btnToggleAudio.addEventListener('click', async () => {
-      if (this.engine.audioAnalyzer.isActive) {
-        this.engine.audioAnalyzer.stop();
-        if (songFileStatus) songFileStatus.classList.add('hidden');
-        updateAudioUI('off');
-      } else {
-        const ok = await this.engine.audioAnalyzer.startMic();
-        if (ok) updateAudioUI('mic', 'Mic Active');
-      }
-    });
 
     if (audioSrcOff) {
       audioSrcOff.addEventListener('click', () => {
