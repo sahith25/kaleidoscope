@@ -26,6 +26,7 @@ import {
   Paintbrush,
   Trash2,
   X,
+  Share2,
   Music,
   Disc,
   Volume2,
@@ -128,6 +129,7 @@ export class ControlPanel {
         Paintbrush,
         Trash2,
         X,
+        Share2,
         Music,
         Disc,
         Volume2,
@@ -371,6 +373,17 @@ export class ControlPanel {
     if (btnClearDraw) {
       btnClearDraw.addEventListener('click', () => {
         this.engine.mediaManager.drawingSource.clear();
+      });
+    }
+
+    const btnToggleStringArt = document.getElementById('btnToggleStringArt');
+    if (btnToggleStringArt) {
+      btnToggleStringArt.addEventListener('click', () => {
+        const drawingSource = this.engine.mediaManager.drawingSource;
+        drawingSource.connectFingers = !drawingSource.connectFingers;
+        btnToggleStringArt.classList.toggle('active', drawingSource.connectFingers);
+        btnToggleStringArt.classList.toggle('bg-purple-600/80', drawingSource.connectFingers);
+        btnToggleStringArt.classList.toggle('text-white', drawingSource.connectFingers);
       });
     }
 

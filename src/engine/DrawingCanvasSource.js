@@ -1,7 +1,7 @@
 /**
  * DrawingCanvasSource.js
  * Offscreen interactive paint/drawing canvas module.
- * Supports multi-finger touches and audio-reactive simulated finger brushes.
+ * Supports multi-finger touches, audio-reactive simulated finger brushes, and interconnected finger string art webs.
  */
 export class DrawingCanvasSource {
   constructor(canvas) {
@@ -12,6 +12,7 @@ export class DrawingCanvasSource {
     this.brushColor = 'rainbow'; // 'rainbow' or hex color '#a855f7'
     this.strokePositions = {}; // id -> { x, y }
     this.hueCounter = 0;
+    this.connectFingers = false; // String Art / Interconnected Web mode
 
     this.initCanvas();
   }
@@ -63,6 +64,10 @@ export class DrawingCanvasSource {
   startStroke(x, y, id = 0) {
     this.strokePositions[id] = { x, y };
     this.drawDot(x, y, id);
+
+    if (this.connectFingers) {
+      this.drawConnectingWeb(Object.values(this.strokePositions));
+    }
   }
 
   moveStroke(x, y, id = 0) {
@@ -94,6 +99,10 @@ export class DrawingCanvasSource {
     this.ctx.restore();
 
     this.strokePositions[id] = { x, y };
+
+    if (this.connectFingers) {
+      this.drawConnectingWeb(Object.values(this.strokePositions));
+    }
   }
 
   endStroke(id = 0) {
@@ -115,6 +124,38 @@ export class DrawingCanvasSource {
     this.ctx.beginPath();
     this.ctx.arc(x, y, Math.max(1, this.brushSize / 2), 0, Math.PI * 2);
     this.ctx.fill();
+    this.ctx.restore();
+  }
+
+  drawConnectingWeb(points) {
+    if (!points || points.length < 2) return;
+
+    this.hueCounter += 2;
+    this.ctx.save();
+    this.ctx.lineWidth = Math.max(1, this.brushSize * 0.8);
+    this.ctx.lineCap = 'round';
+    this.ctx.lineJoin = 'round';
+
+    for (let i = 0; i < points.length; i++) {
+      for (let j = i + 1; j < points.length; j++) {
+        const p1 = points[i];
+        const p2 = points[j];
+        if (!p1 || !p2) continue;
+
+        const color = this.brushColor === 'rainbow'
+          ? `hsl(${(this.hueCounter + i * 45 + j * 65) % 360}, 100%, 65%)`
+          : this.brushColor;
+
+        this.ctx.strokeStyle = color;
+        this.ctx.shadowBlur = Math.max(3, this.brushSize * 1.5);
+        this.ctx.shadowColor = color;
+
+        this.ctx.beginPath();
+        this.ctx.moveTo(p1.x, p1.y);
+        this.ctx.lineTo(p2.x, p2.y);
+        this.ctx.stroke();
+      }
+    }
     this.ctx.restore();
   }
 }
