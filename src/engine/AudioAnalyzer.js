@@ -80,7 +80,7 @@ export class AudioAnalyzer {
   async startSystemAudio() {
     this.stop();
     if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
-      alert("System audio capture is not supported on this browser. Try uploading an audio file instead.");
+      alert("System/Tab audio capture (getDisplayMedia) is restricted by Apple on iPadOS & iOS Safari/Chrome.\n\n💡 Tip for iPad: Use 'Mic' (plays audio through speaker) or 'Song' (upload MP3 file)!");
       return false;
     }
 
