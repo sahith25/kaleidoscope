@@ -402,15 +402,23 @@ export class ControlPanel {
       }
     });
 
+    const autoPaintOptions = document.getElementById('autoPaintOptions');
+
     if (btnAutoPaintAudio) {
       btnAutoPaintAudio.addEventListener('click', () => {
         this.engine.autoPaintAudio = !this.engine.autoPaintAudio;
         btnAutoPaintAudio.classList.toggle('active', this.engine.autoPaintAudio);
-        const count = this.engine.autoPaintFingerCount || 3;
+        btnAutoPaintAudio.classList.toggle('bg-cyan-600/80', this.engine.autoPaintAudio);
+        btnAutoPaintAudio.classList.toggle('text-white', this.engine.autoPaintAudio);
+
+        if (autoPaintOptions) {
+          autoPaintOptions.classList.toggle('hidden', !this.engine.autoPaintAudio);
+        }
+
         if (labelAutoPaint) {
           labelAutoPaint.textContent = this.engine.autoPaintAudio 
-            ? `Audio Auto-Paint: ON (${count} F)` 
-            : `Audio Auto-Paint (${count} Fingers)`;
+            ? `Audio Auto-Paint: ON` 
+            : `Audio Auto-Paint`;
         }
       });
     }

@@ -311,6 +311,13 @@ export class KaleidoscopeEngine {
 
           this.mediaManager.drawingSource.moveStroke(fx, fy, 1001 + id);
         });
+
+        // Cleanly prune stale finger IDs if finger count was lowered
+        for (let staleId = 1001 + count; staleId <= 1010; staleId++) {
+          if (this.mediaManager.drawingSource.strokePositions[staleId]) {
+            this.mediaManager.drawingSource.endStroke(staleId);
+          }
+        }
       }
 
       this.mediaManager.drawToCanvas(

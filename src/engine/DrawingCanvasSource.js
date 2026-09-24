@@ -12,7 +12,7 @@ export class DrawingCanvasSource {
     this.brushColor = 'rainbow'; // 'rainbow' or hex color '#a855f7'
     this.strokePositions = {}; // id -> { x, y }
     this.hueCounter = 0;
-    this.connectFingers = false; // String Art / Interconnected Web mode
+    this.connectFingers = true; // String Art / Interconnected Web mode (default enabled)
 
     this.initCanvas();
   }
@@ -77,6 +77,14 @@ export class DrawingCanvasSource {
     }
 
     const lastPos = this.strokePositions[id];
+    this.strokePositions[id] = { x, y };
+
+    // 1. Draw connecting web mesh layer FIRST so individual finger strokes render ON TOP (iPad stack layer behavior)
+    if (this.connectFingers) {
+      this.drawConnectingWeb(Object.values(this.strokePositions));
+    }
+
+    // 2. Draw continuous finger line on top
     this.hueCounter += 2;
     const hueOffset = id * 70;
     const color = this.brushColor === 'rainbow' 
@@ -97,12 +105,6 @@ export class DrawingCanvasSource {
     this.ctx.lineTo(x, y);
     this.ctx.stroke();
     this.ctx.restore();
-
-    this.strokePositions[id] = { x, y };
-
-    if (this.connectFingers) {
-      this.drawConnectingWeb(Object.values(this.strokePositions));
-    }
   }
 
   endStroke(id = 0) {
