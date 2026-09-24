@@ -19,17 +19,15 @@ describe('AudioAnalyzer', () => {
     expect(data).toEqual({ volume: 0, bass: 0, mid: 0, treble: 0 });
   });
 
-  it('should stop audio streams and audio context when stop is called', () => {
+  it('should stop audio streams when stop is called', () => {
     const mockTrack = { stop: vi.fn() };
     analyzer.microphoneStream = { getTracks: () => [mockTrack] };
-    analyzer.audioCtx = { state: 'running', close: vi.fn().mockResolvedValue() };
     analyzer.isActive = true;
 
     analyzer.stop();
 
     expect(mockTrack.stop).toHaveBeenCalled();
     expect(analyzer.microphoneStream).toBeNull();
-    expect(analyzer.audioCtx).toBeNull();
     expect(analyzer.isActive).toBe(false);
   });
 

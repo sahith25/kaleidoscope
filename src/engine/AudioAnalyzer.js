@@ -10,6 +10,8 @@ export class AudioAnalyzer {
     this.systemStream = null;
     this.audioElement = null;
     this.mediaElementSource = null;
+    this.micSource = null;
+    this.systemSource = null;
     this.dataArray = null;
     this.isActive = false;
     this.sourceMode = 'mic'; // 'mic', 'file', 'system'
@@ -23,6 +25,23 @@ export class AudioAnalyzer {
     };
   }
 
+  ensureAudioContext() {
+    if (!this.audioCtx || this.audioCtx.state === 'closed') {
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      this.audioCtx = new AudioContextClass();
+    }
+    if (this.audioCtx.state === 'suspended') {
+      this.audioCtx.resume();
+    }
+    if (!this.analyser) {
+      this.analyser = this.audioCtx.createAnalyser();
+      this.analyser.fftSize = 256;
+      this.analyser.smoothingTimeConstant = 0.8;
+      this.dataArray = new Uint8Array(this.analyser.frequencyBinCount);
+    }
+    return this.audioCtx;
+  }
+
   async toggleAudio() {
     if (this.isActive) {
       this.stop();
@@ -30,6 +49,8 @@ export class AudioAnalyzer {
     } else {
       if (this.sourceMode === 'file' && this.audioElement && this.audioElement.src) {
         return await this.playAudioFile();
+      } else if (this.sourceMode === 'system') {
+        return await this.startSystemAudio();
       } else {
         return await this.startMic();
       }
@@ -39,28 +60,20 @@ export class AudioAnalyzer {
   async startMic() {
     this.stop();
     try {
+      this.ensureAudioContext();
+
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
       this.microphoneStream = stream;
 
-      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-      this.audioCtx = new AudioContextClass();
-      if (this.audioCtx.state === 'suspended') {
-        await this.audioCtx.resume();
-      }
+      this.micSource = this.audioCtx.createMediaStreamSource(stream);
+      this.micSource.connect(this.analyser);
 
-      const source = this.audioCtx.createMediaStreamSource(stream);
-      this.analyser = this.audioCtx.createAnalyser();
-      this.analyser.fftSize = 256;
-      this.analyser.smoothingTimeConstant = 0.8;
-
-      source.connect(this.analyser);
-      this.dataArray = new Uint8Array(this.analyser.frequencyBinCount);
       this.isActive = true;
       this.sourceMode = 'mic';
       return true;
     } catch (err) {
       console.warn("AudioAnalyzer: Could not access microphone", err);
-      this.isActive = false;
+      this.stop();
       return false;
     }
   }
@@ -89,19 +102,11 @@ export class AudioAnalyzer {
         return false;
       }
 
-      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-      this.audioCtx = new AudioContextClass();
-      if (this.audioCtx.state === 'suspended') {
-        await this.audioCtx.resume();
-      }
+      this.ensureAudioContext();
 
-      const source = this.audioCtx.createMediaStreamSource(new MediaStream(audioTracks));
-      this.analyser = this.audioCtx.createAnalyser();
-      this.analyser.fftSize = 256;
-      this.analyser.smoothingTimeConstant = 0.8;
+      this.systemSource = this.audioCtx.createMediaStreamSource(new MediaStream(audioTracks));
+      this.systemSource.connect(this.analyser);
 
-      source.connect(this.analyser);
-      this.dataArray = new Uint8Array(this.analyser.frequencyBinCount);
       this.isActive = true;
       this.sourceMode = 'system';
 
@@ -111,7 +116,7 @@ export class AudioAnalyzer {
       return true;
     } catch (err) {
       console.warn("AudioAnalyzer: Could not access system audio", err);
-      this.isActive = false;
+      this.stop();
       return false;
     }
   }
@@ -119,34 +124,24 @@ export class AudioAnalyzer {
   async loadAudioFile(file) {
     this.stop();
     try {
-      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-      if (!this.audioCtx || this.audioCtx.state === 'closed') {
-        this.audioCtx = new AudioContextClass();
-      }
-      if (this.audioCtx.state === 'suspended') {
-        await this.audioCtx.resume();
-      }
+      this.ensureAudioContext();
 
       if (!this.audioElement) {
         this.audioElement = new Audio();
         this.audioElement.crossOrigin = 'anonymous';
-      }
-
-      this.analyser = this.audioCtx.createAnalyser();
-      this.analyser.fftSize = 256;
-      this.analyser.smoothingTimeConstant = 0.8;
-
-      if (!this.mediaElementSource) {
         this.mediaElementSource = this.audioCtx.createMediaElementSource(this.audioElement);
+        this.mediaElementSource.connect(this.analyser);
+        this.analyser.connect(this.audioCtx.destination);
       }
-      this.mediaElementSource.connect(this.analyser);
-      this.analyser.connect(this.audioCtx.destination);
-      this.dataArray = new Uint8Array(this.analyser.frequencyBinCount);
 
       const url = URL.createObjectURL(file);
       this.audioElement.src = url;
       this.audioElement.loop = true;
       this.fileName = file.name;
+
+      if (this.audioCtx.state === 'suspended') {
+        await this.audioCtx.resume();
+      }
 
       await this.audioElement.play();
       this.isActive = true;
@@ -154,19 +149,27 @@ export class AudioAnalyzer {
       return true;
     } catch (err) {
       console.warn("AudioAnalyzer: Could not load audio file", err);
-      this.isActive = false;
+      this.stop();
       return false;
     }
   }
 
   async playAudioFile() {
     if (this.audioElement && this.audioElement.src) {
-      if (this.audioCtx && this.audioCtx.state === 'suspended') {
+      this.ensureAudioContext();
+      if (this.audioCtx.state === 'suspended') {
         await this.audioCtx.resume();
       }
-      await this.audioElement.play();
-      this.isActive = true;
-      return true;
+      try {
+        await this.audioElement.play();
+        this.isActive = true;
+        this.sourceMode = 'file';
+        return true;
+      } catch (err) {
+        console.warn("AudioAnalyzer: Play failed", err);
+        this.isActive = false;
+        return false;
+      }
     }
     return false;
   }
@@ -183,19 +186,21 @@ export class AudioAnalyzer {
       this.microphoneStream.getTracks().forEach(track => track.stop());
       this.microphoneStream = null;
     }
+    if (this.micSource) {
+      try { this.micSource.disconnect(); } catch (e) {}
+      this.micSource = null;
+    }
     if (this.systemStream) {
       this.systemStream.getTracks().forEach(track => track.stop());
       this.systemStream = null;
     }
+    if (this.systemSource) {
+      try { this.systemSource.disconnect(); } catch (e) {}
+      this.systemSource = null;
+    }
     if (this.audioElement) {
       this.audioElement.pause();
     }
-    if (this.audioCtx && this.audioCtx.state !== 'closed') {
-      this.audioCtx.close().catch(() => {});
-      this.audioCtx = null;
-    }
-    this.analyser = null;
-    this.mediaElementSource = null;
     this.isActive = false;
   }
 
@@ -203,6 +208,10 @@ export class AudioAnalyzer {
     if (!this.isActive || !this.analyser) {
       this.audioData = { volume: 0, bass: 0, mid: 0, treble: 0 };
       return this.audioData;
+    }
+
+    if (this.audioCtx && this.audioCtx.state === 'suspended') {
+      this.audioCtx.resume();
     }
 
     this.analyser.getByteFrequencyData(this.dataArray);
