@@ -112,13 +112,39 @@
       <input type="file" id="fileInput" accept="image/*" class="hidden" />
     </div>
 
+    <!-- Audio Input Selector -->
+    <div class="space-y-2 pt-2 border-t border-white/10">
+      <label class="text-xs font-semibold text-slate-300 flex items-center justify-between">
+        <span class="flex items-center gap-1.5"><i data-lucide="music" class="w-3.5 h-3.5 text-cyan-400"></i> Audio Reactive Input</span>
+      </label>
+      <div class="grid grid-cols-3 gap-1.5">
+        <button id="audioSrcMic" class="audio-src-btn glass-button p-2 rounded-xl flex flex-col items-center gap-1 text-[11px] active">
+          <i data-lucide="mic" class="w-3.5 h-3.5 text-cyan-400"></i>
+          <span>Mic</span>
+        </button>
+        <button id="audioSrcFile" class="audio-src-btn glass-button p-2 rounded-xl flex flex-col items-center gap-1 text-[11px]">
+          <i data-lucide="music" class="w-3.5 h-3.5 text-purple-400"></i>
+          <span>Song File</span>
+        </button>
+        <button id="audioSrcSystem" class="audio-src-btn glass-button p-2 rounded-xl flex flex-col items-center gap-1 text-[11px]">
+          <i data-lucide="disc" class="w-3.5 h-3.5 text-pink-400"></i>
+          <span>Device Audio</span>
+        </button>
+      </div>
+      <input type="file" id="audioFileInput" accept="audio/*" class="hidden" />
+      <div id="songFileStatus" class="hidden text-[11px] text-purple-300 flex items-center justify-between bg-purple-950/40 p-2 rounded-xl border border-purple-500/20">
+        <span id="songFileName" class="truncate pr-2 font-medium">No song loaded</span>
+        <button id="btnPlayPauseSong" class="glass-button px-2 py-1 rounded-lg text-[10px] font-bold text-white shrink-0">Play/Pause</button>
+      </div>
+    </div>
+
     <!-- Paint / Draw Controls (Hidden unless Draw mode active) -->
     <div id="drawControls" class="space-y-3 pt-2 border-t border-white/10 hidden">
       <div class="flex justify-between items-center text-xs font-semibold text-slate-200">
         <span class="flex items-center gap-1.5"><i data-lucide="paintbrush" class="w-3.5 h-3.5 text-emerald-400"></i> Brush Size</span>
-        <span id="valBrushSize" class="text-emerald-300 font-bold">12px</span>
+        <span id="valBrushSize" class="text-emerald-300 font-bold">2px</span>
       </div>
-      <input type="range" id="sliderBrushSize" min="2" max="50" step="1" value="12" class="w-full" />
+      <input type="range" id="sliderBrushSize" min="1" max="50" step="1" value="2" class="w-full" />
 
       <div class="space-y-1.5">
         <span class="text-xs font-medium text-slate-300">Brush Color</span>
@@ -133,6 +159,11 @@
 
       <button id="btnClearDraw" class="w-full glass-button py-1.5 rounded-xl text-xs font-semibold text-rose-300 flex items-center justify-center gap-1.5">
         <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Clear Canvas
+      </button>
+
+      <button id="btnAutoPaintAudio" class="w-full glass-button py-2 rounded-xl text-xs font-semibold text-cyan-300 flex items-center justify-center gap-2 border border-cyan-500/30 bg-cyan-950/30">
+        <i data-lucide="sparkles" class="w-4 h-4 text-cyan-400"></i>
+        <span id="labelAutoPaint">3-Finger Audio Auto-Paint</span>
       </button>
     </div>
 

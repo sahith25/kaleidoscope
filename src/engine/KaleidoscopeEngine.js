@@ -27,6 +27,7 @@ export class KaleidoscopeEngine {
     this.zoomPulse = 0.0;
     this.trailEffect = 0.15;
     this.colorShiftRate = 0.5;
+    this.autoPaintAudio = false;
 
     // Interactive Drag / Pan & Angle State
     this.panOffset = { x: 0, y: 0 };
@@ -202,6 +203,32 @@ export class KaleidoscopeEngine {
     if (this.mediaManager.sourceType === 'generative') {
       this.generativeSource.update(dt, audio);
     } else {
+      if (this.mediaManager.sourceType === 'draw' && this.autoPaintAudio && audio.volume > 0.01) {
+        const srcW = this.sourceCanvas.width;
+        const srcH = this.sourceCanvas.height;
+        const cx = srcW / 2;
+        const cy = srcH / 2;
+        const t = this.time;
+
+        // Finger 1 (Bass Sweep): Large flowing Lissajous orbit
+        const r1 = (srcW * 0.20) + (audio.bass * 140);
+        const x1 = cx + Math.cos(t * 1.4) * r1 + Math.sin(t * 0.8) * 35;
+        const y1 = cy + Math.sin(t * 1.1) * r1 + Math.cos(t * 0.6) * 35;
+        this.mediaManager.drawingSource.moveStroke(x1, y1, 1);
+
+        // Finger 2 (Mid Range): Counter-rotating harmonic flower
+        const r2 = (srcW * 0.14) + (audio.mid * 100);
+        const x2 = cx + Math.cos(-t * 2.2 + 2.09) * r2;
+        const y2 = cy + Math.sin(t * 1.8 + 2.09) * r2;
+        this.mediaManager.drawingSource.moveStroke(x2, y2, 2);
+
+        // Finger 3 (Treble Sparkler): Fast dancing orbital spiral
+        const r3 = (srcW * 0.26) + (audio.treble * 80);
+        const x3 = cx + Math.cos(t * 3.5 + 4.18) * r3 + Math.cos(t * 6.0) * (25 + audio.treble * 35);
+        const y3 = cy + Math.sin(-t * 2.9 + 4.18) * r3 + Math.sin(t * 6.0) * (25 + audio.treble * 35);
+        this.mediaManager.drawingSource.moveStroke(x3, y3, 3);
+      }
+
       this.mediaManager.drawToCanvas(
         this.sourceCtx,
         this.sourceCanvas.width,

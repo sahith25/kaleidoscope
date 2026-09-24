@@ -1,17 +1,16 @@
 /**
  * DrawingCanvasSource.js
  * Offscreen interactive paint/drawing canvas module.
- * Allows drawing strokes that instantly project into N-fold kaleidoscope symmetry.
+ * Supports multi-finger touches and audio-reactive simulated finger brushes.
  */
 export class DrawingCanvasSource {
   constructor(canvas) {
     this.canvas = canvas;
     this.ctx = canvas.getContext('2d');
     
-    this.brushSize = 12;
+    this.brushSize = 2;
     this.brushColor = 'rainbow'; // 'rainbow' or hex color '#a855f7'
-    this.isDrawing = false;
-    this.lastPos = null;
+    this.strokePositions = {}; // id -> { x, y }
     this.hueCounter = 0;
 
     this.initCanvas();
@@ -57,21 +56,26 @@ export class DrawingCanvasSource {
   }
 
   clear() {
+    this.strokePositions = {};
     this.initCanvas();
   }
 
-  startStroke(x, y) {
-    this.isDrawing = true;
-    this.lastPos = { x, y };
-    this.drawDot(x, y);
+  startStroke(x, y, id = 0) {
+    this.strokePositions[id] = { x, y };
+    this.drawDot(x, y, id);
   }
 
-  moveStroke(x, y) {
-    if (!this.isDrawing || !this.lastPos) return;
+  moveStroke(x, y, id = 0) {
+    if (!this.strokePositions[id]) {
+      this.startStroke(x, y, id);
+      return;
+    }
 
-    this.hueCounter += 3;
+    const lastPos = this.strokePositions[id];
+    this.hueCounter += 2;
+    const hueOffset = id * 70;
     const color = this.brushColor === 'rainbow' 
-      ? `hsl(${this.hueCounter % 360}, 100%, 65%)` 
+      ? `hsl(${(this.hueCounter + hueOffset) % 360}, 100%, 65%)` 
       : this.brushColor;
 
     this.ctx.save();
@@ -80,36 +84,36 @@ export class DrawingCanvasSource {
     this.ctx.lineWidth = this.brushSize;
     this.ctx.lineCap = 'round';
     this.ctx.lineJoin = 'round';
-    this.ctx.shadowBlur = this.brushSize * 1.5;
+    this.ctx.shadowBlur = Math.max(3, this.brushSize * 1.5);
     this.ctx.shadowColor = color;
 
     this.ctx.beginPath();
-    this.ctx.moveTo(this.lastPos.x, this.lastPos.y);
+    this.ctx.moveTo(lastPos.x, lastPos.y);
     this.ctx.lineTo(x, y);
     this.ctx.stroke();
     this.ctx.restore();
 
-    this.lastPos = { x, y };
+    this.strokePositions[id] = { x, y };
   }
 
-  endStroke() {
-    this.isDrawing = false;
-    this.lastPos = null;
+  endStroke(id = 0) {
+    delete this.strokePositions[id];
   }
 
-  drawDot(x, y) {
-    this.hueCounter += 5;
+  drawDot(x, y, id = 0) {
+    this.hueCounter += 4;
+    const hueOffset = id * 70;
     const color = this.brushColor === 'rainbow' 
-      ? `hsl(${this.hueCounter % 360}, 100%, 65%)` 
+      ? `hsl(${(this.hueCounter + hueOffset) % 360}, 100%, 65%)` 
       : this.brushColor;
 
     this.ctx.save();
     this.ctx.fillStyle = color;
-    this.ctx.shadowBlur = this.brushSize * 1.5;
+    this.ctx.shadowBlur = Math.max(3, this.brushSize * 1.5);
     this.ctx.shadowColor = color;
 
     this.ctx.beginPath();
-    this.ctx.arc(x, y, this.brushSize / 2, 0, Math.PI * 2);
+    this.ctx.arc(x, y, Math.max(1, this.brushSize / 2), 0, Math.PI * 2);
     this.ctx.fill();
     this.ctx.restore();
   }

@@ -22,6 +22,7 @@ export class MediaManager {
     this.sourceType = type;
 
     if (type === 'draw') {
+      this.drawingSource.clear();
       return true;
     } else if (type === 'image' && file) {
       return await this.loadImageFromFile(file);

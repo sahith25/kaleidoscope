@@ -25,7 +25,10 @@ import {
   MousePointer, 
   Paintbrush,
   Trash2,
-  X 
+  X,
+  Music,
+  Disc,
+  Volume2
 } from 'lucide';
 
 export class ControlPanel {
@@ -123,7 +126,10 @@ export class ControlPanel {
         MousePointer, 
         Paintbrush,
         Trash2,
-        X 
+        X,
+        Music,
+        Disc,
+        Volume2
       }
     });
   }
@@ -157,23 +163,96 @@ export class ControlPanel {
     const btnSnapshot = document.getElementById('btnSnapshot');
     btnSnapshot.addEventListener('click', () => this.engine.takeSnapshot());
 
-    // Audio Toggle Button
+    // Audio Elements
     const btnToggleAudio = document.getElementById('btnToggleAudio');
     const iconMic = document.getElementById('iconMic');
     const labelAudio = document.getElementById('labelAudio');
 
-    btnToggleAudio.addEventListener('click', async () => {
-      const active = await this.engine.audioAnalyzer.toggleAudio();
+    const updateAudioHeaderUI = (active, labelText = null) => {
       btnToggleAudio.classList.toggle('active', active);
       if (active) {
         iconMic.setAttribute('data-lucide', 'mic');
-        labelAudio.textContent = 'Audio Active';
+        labelAudio.textContent = labelText || 'Audio Active';
       } else {
         iconMic.setAttribute('data-lucide', 'mic-off');
         labelAudio.textContent = 'Audio Reactive';
       }
       this.initLucideIcons();
+    };
+
+    btnToggleAudio.addEventListener('click', async () => {
+      const active = await this.engine.audioAnalyzer.toggleAudio();
+      updateAudioHeaderUI(active);
     });
+
+    // Audio Input Selector Buttons
+    const audioSrcMic = document.getElementById('audioSrcMic');
+    const audioSrcFile = document.getElementById('audioSrcFile');
+    const audioSrcSystem = document.getElementById('audioSrcSystem');
+    const audioFileInput = document.getElementById('audioFileInput');
+    const songFileStatus = document.getElementById('songFileStatus');
+    const songFileName = document.getElementById('songFileName');
+    const btnPlayPauseSong = document.getElementById('btnPlayPauseSong');
+
+    const updateAudioSrcButtons = (activeBtn) => {
+      [audioSrcMic, audioSrcFile, audioSrcSystem].forEach(btn => btn?.classList.remove('active'));
+      activeBtn?.classList.add('active');
+    };
+
+    if (audioSrcMic) {
+      audioSrcMic.addEventListener('click', async () => {
+        updateAudioSrcButtons(audioSrcMic);
+        if (songFileStatus) songFileStatus.classList.add('hidden');
+        const ok = await this.engine.audioAnalyzer.startMic();
+        updateAudioHeaderUI(ok, 'Mic Active');
+      });
+    }
+
+    if (audioSrcFile) {
+      audioSrcFile.addEventListener('click', () => {
+        audioFileInput.click();
+      });
+    }
+
+    if (audioFileInput) {
+      audioFileInput.addEventListener('change', async (e) => {
+        if (e.target.files && e.target.files[0]) {
+          const file = e.target.files[0];
+          const ok = await this.engine.audioAnalyzer.loadAudioFile(file);
+          if (ok) {
+            updateAudioSrcButtons(audioSrcFile);
+            if (songFileStatus) songFileStatus.classList.remove('hidden');
+            if (songFileName) songFileName.textContent = file.name;
+            updateAudioHeaderUI(true, 'Song Playing');
+          }
+        }
+      });
+    }
+
+    if (btnPlayPauseSong) {
+      btnPlayPauseSong.addEventListener('click', async () => {
+        if (this.engine.audioAnalyzer.isActive) {
+          this.engine.audioAnalyzer.pauseAudioFile();
+          updateAudioHeaderUI(false);
+          btnPlayPauseSong.textContent = 'Play';
+        } else {
+          const ok = await this.engine.audioAnalyzer.playAudioFile();
+          updateAudioHeaderUI(ok, 'Song Playing');
+          btnPlayPauseSong.textContent = 'Pause';
+        }
+      });
+    }
+
+    if (audioSrcSystem) {
+      audioSrcSystem.addEventListener('click', async () => {
+        if (songFileStatus) songFileStatus.classList.add('hidden');
+        const ok = await this.engine.audioAnalyzer.startSystemAudio();
+        if (ok) {
+          updateAudioSrcButtons(audioSrcSystem);
+          updateAudioHeaderUI(true, 'System Audio');
+        }
+      });
+    }
 
     // Source Selector Buttons
     const srcGenerative = document.getElementById('srcGenerative');
@@ -184,12 +263,18 @@ export class ControlPanel {
     const drawControls = document.getElementById('drawControls');
     const cameraControls = document.getElementById('cameraControls');
     const btnFlipCamera = document.getElementById('btnFlipCamera');
+    const presetBar = document.getElementById('presetBar');
 
     const updateSrcButtons = (activeBtn, mode = 'generative') => {
       [srcGenerative, srcDraw, srcImage, srcWebcam].forEach(btn => btn.classList.remove('active'));
       activeBtn.classList.add('active');
       if (drawControls) drawControls.classList.toggle('hidden', mode !== 'draw');
       if (cameraControls) cameraControls.classList.toggle('hidden', mode !== 'webcam');
+      
+      // Presets should not be visible in paint mode
+      if (presetBar) {
+        presetBar.classList.toggle('hidden', mode === 'draw');
+      }
     };
 
     srcGenerative.addEventListener('click', () => {
@@ -246,6 +331,20 @@ export class ControlPanel {
     if (btnClearDraw) {
       btnClearDraw.addEventListener('click', () => {
         this.engine.mediaManager.drawingSource.clear();
+      });
+    }
+
+    const btnAutoPaintAudio = document.getElementById('btnAutoPaintAudio');
+    const labelAutoPaint = document.getElementById('labelAutoPaint');
+    if (btnAutoPaintAudio) {
+      btnAutoPaintAudio.addEventListener('click', () => {
+        this.engine.autoPaintAudio = !this.engine.autoPaintAudio;
+        btnAutoPaintAudio.classList.toggle('active', this.engine.autoPaintAudio);
+        if (labelAutoPaint) {
+          labelAutoPaint.textContent = this.engine.autoPaintAudio 
+            ? '3-Finger Audio Paint: ON' 
+            : '3-Finger Audio Auto-Paint';
+        }
       });
     }
 
@@ -319,11 +418,14 @@ export class ControlPanel {
       const srcImage = document.getElementById('srcImage');
       const srcWebcam = document.getElementById('srcWebcam');
       const drawControls = document.getElementById('drawControls');
+      const presetBar = document.getElementById('presetBar');
+
       if (srcGenerative && srcDraw) {
         [srcGenerative, srcDraw, srcImage, srcWebcam].forEach(btn => btn?.classList.remove('active'));
         srcGenerative.classList.add('active');
       }
       if (drawControls) drawControls.classList.add('hidden');
+      if (presetBar) presetBar.classList.remove('hidden');
     }
 
     this.engine.slices = preset.slices;
