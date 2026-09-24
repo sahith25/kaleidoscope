@@ -28,6 +28,7 @@ export class KaleidoscopeEngine {
     this.trailEffect = 0.15;
     this.colorShiftRate = 0.5;
     this.autoPaintAudio = false;
+    this.autoPaintFingerCount = 3;
     this.apertureSize = 1.0; // 0.2 to 1.0 (tube aperture rim mask)
     this.mirrorRadiusScale = 1.0; // 0.2 to 2.0 (mirror reflection reach)
 
@@ -237,13 +238,23 @@ export class KaleidoscopeEngine {
         // Hand orientation angle rotates gently as hand glides
         this.virtualHand.angle = Math.sin(t * 0.5) * 0.7 + Math.cos(t * 0.3) * 0.3;
 
-        // 3 Fixed relative finger positions (Index, Middle, Ring fingers)
-        const spreadFactor = 1.0 + (audio.bass * 0.8); // Bass opens/closes hand finger spread
-        const baseOffsets = [
-          { x: -42 * spreadFactor, y: -12 * spreadFactor }, // Index Finger
-          { x: 0,                   y: -32 * spreadFactor }, // Middle Finger
-          { x: 42 * spreadFactor,  y: -12 * spreadFactor }  // Ring Finger
-        ];
+        // Generate N finger positions dynamically based on autoPaintFingerCount
+        const count = Math.max(1, this.autoPaintFingerCount || 3);
+        const spreadFactor = 1.0 + (audio.bass * 0.8);
+        const baseOffsets = [];
+
+        if (count === 1) {
+          baseOffsets.push({ x: 0, y: -20 * spreadFactor });
+        } else {
+          const spacing = 84 / (count - 1);
+          for (let i = 0; i < count; i++) {
+            const relX = (-42 + i * spacing) * spreadFactor;
+            // Arch fingers slightly in a natural curve
+            const arch = Math.sin((i / (count - 1)) * Math.PI) * 22 * spreadFactor;
+            const relY = -10 * spreadFactor - arch;
+            baseOffsets.push({ x: relX, y: relY });
+          }
+        }
 
         baseOffsets.forEach((off, id) => {
           // Treble adds subtle organic fingertip micro-jitter

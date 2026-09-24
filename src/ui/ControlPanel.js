@@ -376,14 +376,28 @@ export class ControlPanel {
 
     const btnAutoPaintAudio = document.getElementById('btnAutoPaintAudio');
     const labelAutoPaint = document.getElementById('labelAutoPaint');
+
+    this.bindSlider('sliderFingerCount', 'valFingerCount', (val) => {
+      const count = parseInt(val, 10);
+      this.engine.autoPaintFingerCount = count;
+      const valDisplay = document.getElementById('valFingerCount');
+      if (valDisplay) valDisplay.textContent = `${count} ${count === 1 ? 'Finger' : 'Fingers'}`;
+      if (labelAutoPaint) {
+        labelAutoPaint.textContent = this.engine.autoPaintAudio 
+          ? `Audio Auto-Paint: ON (${count} F)` 
+          : `Audio Auto-Paint (${count} Fingers)`;
+      }
+    });
+
     if (btnAutoPaintAudio) {
       btnAutoPaintAudio.addEventListener('click', () => {
         this.engine.autoPaintAudio = !this.engine.autoPaintAudio;
         btnAutoPaintAudio.classList.toggle('active', this.engine.autoPaintAudio);
+        const count = this.engine.autoPaintFingerCount || 3;
         if (labelAutoPaint) {
           labelAutoPaint.textContent = this.engine.autoPaintAudio 
-            ? '3-Finger Audio Paint: ON' 
-            : '3-Finger Audio Auto-Paint';
+            ? `Audio Auto-Paint: ON (${count} F)` 
+            : `Audio Auto-Paint (${count} Fingers)`;
         }
       });
     }
