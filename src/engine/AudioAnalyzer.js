@@ -30,8 +30,6 @@ export class AudioAnalyzer {
     } else {
       if (this.sourceMode === 'file' && this.audioElement && this.audioElement.src) {
         return await this.playAudioFile();
-      } else if (this.sourceMode === 'system') {
-        return await this.startSystemAudio();
       } else {
         return await this.startMic();
       }
