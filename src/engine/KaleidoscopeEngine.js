@@ -244,14 +244,16 @@ export class KaleidoscopeEngine {
         const baseOffsets = [];
 
         if (count === 1) {
-          baseOffsets.push({ x: 0, y: -20 * spreadFactor });
+          const radialWeave = Math.sin(t * 1.8) * (40 * spreadFactor);
+          baseOffsets.push({ x: 0, y: -20 * spreadFactor + radialWeave });
         } else {
           const spacing = 84 / (count - 1);
           for (let i = 0; i < count; i++) {
             const relX = (-42 + i * spacing) * spreadFactor;
-            // Arch fingers slightly in a natural curve
+            // Arch fingers slightly in a natural curve with continuous radial weaving
             const arch = Math.sin((i / (count - 1)) * Math.PI) * 22 * spreadFactor;
-            const relY = -10 * spreadFactor - arch;
+            const radialWeave = Math.sin(t * 1.8 + i * 0.8) * (35 * spreadFactor);
+            const relY = -10 * spreadFactor - arch + radialWeave;
             baseOffsets.push({ x: relX, y: relY });
           }
         }
