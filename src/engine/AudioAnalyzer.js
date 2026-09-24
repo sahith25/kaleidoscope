@@ -251,4 +251,23 @@ export class AudioAnalyzer {
 
     return this.audioData;
   }
+
+  getAudioTracks() {
+    if (!this.isActive) return [];
+
+    if (this.sourceMode === 'mic' && this.microphoneStream) {
+      return this.microphoneStream.getAudioTracks();
+    }
+    if (this.sourceMode === 'system' && this.systemStream) {
+      return this.systemStream.getAudioTracks();
+    }
+    if (this.sourceMode === 'file' && this.audioCtx && this.analyser) {
+      if (!this.audioDestination) {
+        this.audioDestination = this.audioCtx.createMediaStreamDestination();
+        this.analyser.connect(this.audioDestination);
+      }
+      return this.audioDestination.stream.getAudioTracks();
+    }
+    return [];
+  }
 }

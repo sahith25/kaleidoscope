@@ -354,4 +354,71 @@ export class KaleidoscopeEngine {
     link.href = dataUrl;
     link.click();
   }
+
+  startRecording() {
+    if (this.isRecording) return false;
+
+    try {
+      const canvasStream = this.canvas.captureStream ? this.canvas.captureStream(60) : null;
+      if (!canvasStream) {
+        alert("Canvas stream capture is not supported in this browser.");
+        return false;
+      }
+
+      const audioTracks = this.audioAnalyzer.getAudioTracks();
+      const combinedTracks = [
+        ...canvasStream.getVideoTracks(),
+        ...audioTracks
+      ];
+
+      const stream = new MediaStream(combinedTracks);
+      const mimeType = typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported('video/webm;codecs=vp9,opus')
+        ? 'video/webm;codecs=vp9,opus'
+        : (typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported('video/webm') ? 'video/webm' : 'video/mp4');
+
+      this.recordedChunks = [];
+      this.mediaRecorder = new MediaRecorder(stream, { mimeType });
+
+      this.mediaRecorder.ondataavailable = (e) => {
+        if (e.data && e.data.size > 0) {
+          this.recordedChunks.push(e.data);
+        }
+      };
+
+      this.mediaRecorder.onstop = () => {
+        const blob = new Blob(this.recordedChunks, { type: mimeType });
+        const ext = mimeType.includes('mp4') ? 'mp4' : 'webm';
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.download = `kaleidoscope_video_${Date.now()}.${ext}`;
+        a.href = url;
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      };
+
+      this.mediaRecorder.start(100);
+      this.isRecording = true;
+      return true;
+    } catch (err) {
+      console.warn("KaleidoscopeEngine: Video recording failed", err);
+      alert("Could not start video recording: " + (err.message || err));
+      this.isRecording = false;
+      return false;
+    }
+  }
+
+  stopRecording() {
+    if (!this.isRecording || !this.mediaRecorder) return;
+    this.mediaRecorder.stop();
+    this.isRecording = false;
+  }
+
+  toggleRecording() {
+    if (this.isRecording) {
+      this.stopRecording();
+      return false;
+    } else {
+      return this.startRecording();
+    }
+  }
 }

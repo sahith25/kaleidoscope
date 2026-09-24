@@ -28,7 +28,8 @@ import {
   X,
   Music,
   Disc,
-  Volume2
+  Volume2,
+  Square
 } from 'lucide';
 
 export class ControlPanel {
@@ -129,7 +130,8 @@ export class ControlPanel {
         X,
         Music,
         Disc,
-        Volume2
+        Volume2,
+        Square
       }
     });
   }
@@ -162,6 +164,37 @@ export class ControlPanel {
     // Snapshot Button
     const btnSnapshot = document.getElementById('btnSnapshot');
     btnSnapshot.addEventListener('click', () => this.engine.takeSnapshot());
+
+    // Record Video Button
+    const btnRecordVideo = document.getElementById('btnRecordVideo');
+    const iconRecord = document.getElementById('iconRecord');
+    const labelRecord = document.getElementById('labelRecord');
+    let recordTimer = null;
+    let recordSecs = 0;
+
+    if (btnRecordVideo) {
+      btnRecordVideo.addEventListener('click', () => {
+        const recording = this.engine.toggleRecording();
+        if (recording) {
+          btnRecordVideo.classList.add('bg-rose-600/80', 'border-rose-500', 'animate-pulse', 'text-white');
+          if (iconRecord) iconRecord.setAttribute('data-lucide', 'square');
+          recordSecs = 0;
+          if (labelRecord) labelRecord.textContent = '00:00';
+          recordTimer = setInterval(() => {
+            recordSecs++;
+            const mins = String(Math.floor(recordSecs / 60)).padStart(2, '0');
+            const secs = String(recordSecs % 60).padStart(2, '0');
+            if (labelRecord) labelRecord.textContent = `${mins}:${secs}`;
+          }, 1000);
+        } else {
+          clearInterval(recordTimer);
+          btnRecordVideo.classList.remove('bg-rose-600/80', 'border-rose-500', 'animate-pulse', 'text-white');
+          if (iconRecord) iconRecord.setAttribute('data-lucide', 'video');
+          if (labelRecord) labelRecord.textContent = 'Record';
+        }
+        this.initLucideIcons();
+      });
+    }
 
     // Audio Elements & Controls
     const audioStateBadge = document.getElementById('audioStateBadge');
