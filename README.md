@@ -71,15 +71,18 @@ flowchart LR
 
 2. **Multi-Input Pattern Sources**:
    - **Generative Particle System**: Swirling concentric polygons, orbiting stars, glowing rings, and organic wave curves.
-   - **Interactive Paint / Draw Mode**: Paint live custom strokes directly onto the canvas with rainbow colors, custom color swatches, adjustable brush sizes, and instant N-fold radial symmetry projection.
+   - **Interactive Paint & Laser Web String Art**: Paint live custom strokes directly onto the canvas with rainbow colors, custom color swatches, adjustable brush sizes, multi-finger string art web mesh, and instant N-fold radial symmetry projection.
    - **Custom Image Upload**: Load any photo (`PNG`, `JPG`, `WEBP`) via file picker or window drag-and-drop.
    - **Live Webcam Mirror**: Project live camera feed into real-time kaleidoscope mirror symmetry.
 
-3. **Audio-Reactive Visualizer**:
-   - Web Audio API integration (`AudioContext`, `AnalyserNode`) extracting real-time FFT spectrums (bass, mid, treble).
-   - Audio frequencies dynamically pulse zoom scale, rotation velocity, and color spectrums in sync with music or microphone input.
+3. **Audio-Reactive Visualizer & Multi-Audio Engine**:
+   - Web Audio API integration (`AudioContext`, `AnalyserNode`) supporting Microphone input, MP3 file upload, and System/Tab audio streams.
+   - Frequencies dynamically pulse zoom scale, rotation velocity, trajectory phase modulation, and color spectrums in sync with music or microphone input.
 
-4. **Glassmorphic UI & Preset Management**:
+4. **120 FPS High-Speed Video & Audio Recording**:
+   - Built-in MediaRecorder engine configured for 120 FPS high-refresh canvas stream capture with merged audio track export.
+
+5. **Glassmorphic UI & Preset Management**:
    - Sleek glassmorphism overlay built with Tailwind CSS and Lucide icons.
    - 6 Instant Visual Presets:
      - 🌌 **Cosmic Mandala**
@@ -89,7 +92,7 @@ flowchart LR
      - 🌀 **Psychedelic Trip**
      - 💎 **Crystal Prism**
 
-5. **Ultra-Fast & Optimized Bundle**:
+6. **Ultra-Fast & Optimized Bundle**:
    - Tree-shaken Lucide icons bundle (~26 KB total production JavaScript asset).
    - High FPS render loop powered by offscreen canvas double-buffering.
 

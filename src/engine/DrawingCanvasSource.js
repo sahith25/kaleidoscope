@@ -70,6 +70,14 @@ export class DrawingCanvasSource {
     }
   }
 
+  getStrokeColor(id = 0, offset = 0) {
+    if (this.brushColor === 'rainbow') {
+      const hue = (this.hueCounter + id * 70 + offset) % 360;
+      return `hsl(${hue}, 100%, 65%)`;
+    }
+    return this.brushColor;
+  }
+
   moveStroke(x, y, id = 0) {
     if (!this.strokePositions[id]) {
       this.startStroke(x, y, id);
@@ -86,10 +94,7 @@ export class DrawingCanvasSource {
 
     // 2. Draw continuous finger line on top
     this.hueCounter += 2;
-    const hueOffset = id * 70;
-    const color = this.brushColor === 'rainbow' 
-      ? `hsl(${(this.hueCounter + hueOffset) % 360}, 100%, 65%)` 
-      : this.brushColor;
+    const color = this.getStrokeColor(id);
 
     this.ctx.save();
     this.ctx.strokeStyle = color;
@@ -113,10 +118,7 @@ export class DrawingCanvasSource {
 
   drawDot(x, y, id = 0) {
     this.hueCounter += 4;
-    const hueOffset = id * 70;
-    const color = this.brushColor === 'rainbow' 
-      ? `hsl(${(this.hueCounter + hueOffset) % 360}, 100%, 65%)` 
-      : this.brushColor;
+    const color = this.getStrokeColor(id);
 
     this.ctx.save();
     this.ctx.fillStyle = color;
@@ -144,9 +146,7 @@ export class DrawingCanvasSource {
         const p2 = points[j];
         if (!p1 || !p2) continue;
 
-        const color = this.brushColor === 'rainbow'
-          ? `hsl(${(this.hueCounter + i * 45 + j * 65) % 360}, 100%, 65%)`
-          : this.brushColor;
+        const color = this.getStrokeColor(i, j * 65);
 
         this.ctx.strokeStyle = color;
         this.ctx.shadowBlur = Math.max(3, this.brushSize * 1.5);
