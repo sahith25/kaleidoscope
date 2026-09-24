@@ -24,6 +24,10 @@ preview:
 lint:
     npm run build
 
+# Run unit tests
+test:
+    npm run test
+
 # Trigger GitHub Actions deployment workflow remotely
 deploy:
     gh workflow run deploy.yml
