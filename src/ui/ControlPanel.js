@@ -393,6 +393,20 @@ export class ControlPanel {
       this.engine.slices = parseInt(val, 10);
     });
 
+    this.bindSlider('sliderAperture', 'valAperture', (val) => {
+      const aperturePct = parseInt(val, 10);
+      this.engine.apertureSize = aperturePct / 100;
+      const valDisplay = document.getElementById('valAperture');
+      if (valDisplay) valDisplay.textContent = `${aperturePct}%`;
+    });
+
+    this.bindSlider('sliderMirrorRadius', 'valMirrorRadius', (val) => {
+      const rad = parseFloat(val);
+      this.engine.mirrorRadiusScale = rad;
+      const valDisplay = document.getElementById('valMirrorRadius');
+      if (valDisplay) valDisplay.textContent = `${rad.toFixed(2)}x`;
+    });
+
     this.bindSlider('sliderSpin', 'valSpin', (val) => {
       this.engine.spinSpeed = parseFloat(val);
     });

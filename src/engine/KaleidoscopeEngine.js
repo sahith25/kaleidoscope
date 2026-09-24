@@ -28,6 +28,8 @@ export class KaleidoscopeEngine {
     this.trailEffect = 0.15;
     this.colorShiftRate = 0.5;
     this.autoPaintAudio = false;
+    this.apertureSize = 1.0; // 0.2 to 1.0 (tube aperture rim mask)
+    this.mirrorRadiusScale = 1.0; // 0.2 to 2.0 (mirror reflection reach)
 
     // Interactive Drag / Pan & Angle State
     this.panOffset = { x: 0, y: 0 };
@@ -282,7 +284,8 @@ export class KaleidoscopeEngine {
     const cx = width / 2;
     const cy = height / 2;
 
-    const radius = Math.sqrt(cx * cx + cy * cy) * 1.2;
+    const maxRadius = Math.sqrt(cx * cx + cy * cy) * 1.2;
+    const radius = maxRadius * this.mirrorRadiusScale;
     const stepAngle = (Math.PI * 2) / this.slices;
 
     // Trail / Motion Blur fade
@@ -341,6 +344,28 @@ export class KaleidoscopeEngine {
       );
 
       this.ctx.restore();
+      this.ctx.restore();
+    }
+
+    // Render Optical Kaleidoscope Brass Tube Aperture Mask
+    if (this.apertureSize < 0.99) {
+      const apertureR = (Math.min(width, height) / 2) * this.apertureSize;
+      const outerR = Math.hypot(width, height);
+
+      this.ctx.save();
+      this.ctx.beginPath();
+      this.ctx.arc(0, 0, outerR, 0, Math.PI * 2);
+      this.ctx.arc(0, 0, apertureR, 0, Math.PI * 2, true); // even-odd clipping ring
+      this.ctx.fillStyle = '#05070c';
+      this.ctx.fill();
+
+      // Draw optical brass tube rim highlight & inner shadow
+      this.ctx.beginPath();
+      this.ctx.arc(0, 0, apertureR, 0, Math.PI * 2);
+      this.ctx.strokeStyle = 'rgba(217, 119, 6, 0.45)'; // Warm brass tube rim
+      this.ctx.lineWidth = 4;
+      this.ctx.stroke();
+
       this.ctx.restore();
     }
 
