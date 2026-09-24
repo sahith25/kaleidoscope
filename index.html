@@ -116,19 +116,24 @@
     <div class="space-y-2 pt-2 border-t border-white/10">
       <label class="text-xs font-semibold text-slate-300 flex items-center justify-between">
         <span class="flex items-center gap-1.5"><i data-lucide="music" class="w-3.5 h-3.5 text-cyan-400"></i> Audio Reactive Input</span>
+        <span id="audioStateBadge" class="text-[10px] px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 font-semibold uppercase">Off</span>
       </label>
-      <div class="grid grid-cols-3 gap-1.5">
-        <button id="audioSrcMic" class="audio-src-btn glass-button p-2 rounded-xl flex flex-col items-center gap-1 text-[11px] active">
+      <div class="grid grid-cols-4 gap-1.5">
+        <button id="audioSrcOff" class="audio-src-btn glass-button p-2 rounded-xl flex flex-col items-center gap-1 text-[11px] active">
+          <i data-lucide="mic-off" class="w-3.5 h-3.5 text-slate-400"></i>
+          <span>Off</span>
+        </button>
+        <button id="audioSrcMic" class="audio-src-btn glass-button p-2 rounded-xl flex flex-col items-center gap-1 text-[11px]">
           <i data-lucide="mic" class="w-3.5 h-3.5 text-cyan-400"></i>
           <span>Mic</span>
         </button>
         <button id="audioSrcFile" class="audio-src-btn glass-button p-2 rounded-xl flex flex-col items-center gap-1 text-[11px]">
           <i data-lucide="music" class="w-3.5 h-3.5 text-purple-400"></i>
-          <span>Song File</span>
+          <span>Song</span>
         </button>
         <button id="audioSrcSystem" class="audio-src-btn glass-button p-2 rounded-xl flex flex-col items-center gap-1 text-[11px]">
           <i data-lucide="disc" class="w-3.5 h-3.5 text-pink-400"></i>
-          <span>Tab Audio</span>
+          <span>Tab</span>
         </button>
       </div>
       <input type="file" id="audioFileInput" accept="audio/*" class="hidden" />

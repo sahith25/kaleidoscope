@@ -163,29 +163,13 @@ export class ControlPanel {
     const btnSnapshot = document.getElementById('btnSnapshot');
     btnSnapshot.addEventListener('click', () => this.engine.takeSnapshot());
 
-    // Audio Elements
+    // Audio Elements & Controls
     const btnToggleAudio = document.getElementById('btnToggleAudio');
     const iconMic = document.getElementById('iconMic');
     const labelAudio = document.getElementById('labelAudio');
+    const audioStateBadge = document.getElementById('audioStateBadge');
 
-    const updateAudioHeaderUI = (active, labelText = null) => {
-      btnToggleAudio.classList.toggle('active', active);
-      if (active) {
-        iconMic.setAttribute('data-lucide', 'mic');
-        labelAudio.textContent = labelText || 'Audio Active';
-      } else {
-        iconMic.setAttribute('data-lucide', 'mic-off');
-        labelAudio.textContent = 'Audio Reactive';
-      }
-      this.initLucideIcons();
-    };
-
-    btnToggleAudio.addEventListener('click', async () => {
-      const active = await this.engine.audioAnalyzer.toggleAudio();
-      updateAudioHeaderUI(active);
-    });
-
-    // Audio Input Selector Buttons
+    const audioSrcOff = document.getElementById('audioSrcOff');
     const audioSrcMic = document.getElementById('audioSrcMic');
     const audioSrcFile = document.getElementById('audioSrcFile');
     const audioSrcSystem = document.getElementById('audioSrcSystem');
@@ -194,17 +178,60 @@ export class ControlPanel {
     const songFileName = document.getElementById('songFileName');
     const btnPlayPauseSong = document.getElementById('btnPlayPauseSong');
 
-    const updateAudioSrcButtons = (activeBtn) => {
-      [audioSrcMic, audioSrcFile, audioSrcSystem].forEach(btn => btn?.classList.remove('active'));
-      activeBtn?.classList.add('active');
+    const updateAudioUI = (activeMode = 'off', labelText = 'Audio Off') => {
+      const isActive = activeMode !== 'off';
+      btnToggleAudio.classList.toggle('active', isActive);
+
+      [audioSrcOff, audioSrcMic, audioSrcFile, audioSrcSystem].forEach(btn => btn?.classList.remove('active'));
+
+      if (activeMode === 'mic') audioSrcMic?.classList.add('active');
+      else if (activeMode === 'file') audioSrcFile?.classList.add('active');
+      else if (activeMode === 'system') audioSrcSystem?.classList.add('active');
+      else audioSrcOff?.classList.add('active');
+
+      if (audioStateBadge) {
+        audioStateBadge.textContent = activeMode.toUpperCase();
+        audioStateBadge.className = `text-[10px] px-2 py-0.5 rounded-full font-semibold uppercase ${
+          isActive ? 'bg-purple-900/60 text-purple-300 border border-purple-500/30' : 'bg-slate-800 text-slate-400'
+        }`;
+      }
+
+      if (isActive) {
+        iconMic.setAttribute('data-lucide', 'mic');
+        labelAudio.textContent = labelText;
+      } else {
+        iconMic.setAttribute('data-lucide', 'mic-off');
+        labelAudio.textContent = 'Audio Off';
+      }
+      this.initLucideIcons();
     };
+
+    // Header Toggle Button: One-click turn on / turn off
+    btnToggleAudio.addEventListener('click', async () => {
+      if (this.engine.audioAnalyzer.isActive) {
+        this.engine.audioAnalyzer.stop();
+        if (songFileStatus) songFileStatus.classList.add('hidden');
+        updateAudioUI('off');
+      } else {
+        const ok = await this.engine.audioAnalyzer.startMic();
+        if (ok) updateAudioUI('mic', 'Mic Active');
+      }
+    });
+
+    if (audioSrcOff) {
+      audioSrcOff.addEventListener('click', () => {
+        this.engine.audioAnalyzer.stop();
+        if (songFileStatus) songFileStatus.classList.add('hidden');
+        updateAudioUI('off');
+      });
+    }
 
     if (audioSrcMic) {
       audioSrcMic.addEventListener('click', async () => {
-        updateAudioSrcButtons(audioSrcMic);
         if (songFileStatus) songFileStatus.classList.add('hidden');
         const ok = await this.engine.audioAnalyzer.startMic();
-        updateAudioHeaderUI(ok, 'Mic Active');
+        if (ok) updateAudioUI('mic', 'Mic Active');
+        else updateAudioUI('off');
       });
     }
 
@@ -220,10 +247,11 @@ export class ControlPanel {
           const file = e.target.files[0];
           const ok = await this.engine.audioAnalyzer.loadAudioFile(file);
           if (ok) {
-            updateAudioSrcButtons(audioSrcFile);
             if (songFileStatus) songFileStatus.classList.remove('hidden');
             if (songFileName) songFileName.textContent = file.name;
-            updateAudioHeaderUI(true, 'Song Playing');
+            updateAudioUI('file', 'Song Playing');
+          } else {
+            updateAudioUI('off');
           }
         }
       });
@@ -233,12 +261,14 @@ export class ControlPanel {
       btnPlayPauseSong.addEventListener('click', async () => {
         if (this.engine.audioAnalyzer.isActive) {
           this.engine.audioAnalyzer.pauseAudioFile();
-          updateAudioHeaderUI(false);
+          updateAudioUI('off');
           btnPlayPauseSong.textContent = 'Play';
         } else {
           const ok = await this.engine.audioAnalyzer.playAudioFile();
-          updateAudioHeaderUI(ok, 'Song Playing');
-          btnPlayPauseSong.textContent = 'Pause';
+          if (ok) {
+            updateAudioUI('file', 'Song Playing');
+            btnPlayPauseSong.textContent = 'Pause';
+          }
         }
       });
     }
@@ -248,8 +278,9 @@ export class ControlPanel {
         if (songFileStatus) songFileStatus.classList.add('hidden');
         const ok = await this.engine.audioAnalyzer.startSystemAudio();
         if (ok) {
-          updateAudioSrcButtons(audioSrcSystem);
-          updateAudioHeaderUI(true, 'System Audio');
+          updateAudioUI('system', 'Tab Audio');
+        } else {
+          updateAudioUI('off');
         }
       });
     }
