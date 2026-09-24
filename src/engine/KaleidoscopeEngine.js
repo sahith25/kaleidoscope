@@ -213,23 +213,28 @@ export class KaleidoscopeEngine {
         const cy = srcH / 2;
         const t = this.time;
 
-        // Initialize virtual hand state if not present
+        // Initialize virtual hand state with accumulated continuous phase integration
         if (!this.virtualHand) {
           this.virtualHand = {
             x: cx,
             y: cy,
             angle: 0,
             targetX: cx,
-            targetY: cy
+            targetY: cy,
+            phase1: 0,
+            phase2: 0,
+            currentSpread: 1.0
           };
         }
 
-        // Smooth organic hand gliding trajectory across the canvas
+        // Accumulate phase angles continuously (never jumps even when speedMult changes)
+        const speedMult = 0.6 + (audio.mid * 1.2);
+        this.virtualHand.phase1 += dt * 0.7 * speedMult;
+        this.virtualHand.phase2 += dt * 1.3 * speedMult;
+
         const wanderRadius = srcW * 0.28;
-        const speedMult = 0.8 + (audio.mid * 1.5);
-        
-        this.virtualHand.targetX = cx + Math.cos(t * 0.7 * speedMult) * wanderRadius + Math.sin(t * 1.3) * (wanderRadius * 0.35);
-        this.virtualHand.targetY = cy + Math.sin(t * 0.9 * speedMult) * wanderRadius + Math.cos(t * 1.1) * (wanderRadius * 0.35);
+        this.virtualHand.targetX = cx + Math.cos(this.virtualHand.phase1) * wanderRadius + Math.sin(this.virtualHand.phase2) * (wanderRadius * 0.35);
+        this.virtualHand.targetY = cy + Math.sin(this.virtualHand.phase1 * 1.2) * wanderRadius + Math.cos(this.virtualHand.phase2 * 0.85) * (wanderRadius * 0.35);
         
         // Smooth lerp hand position
         this.virtualHand.x += (this.virtualHand.targetX - this.virtualHand.x) * 0.08;
@@ -238,9 +243,13 @@ export class KaleidoscopeEngine {
         // Hand orientation angle rotates gently as hand glides
         this.virtualHand.angle = Math.sin(t * 0.5) * 0.7 + Math.cos(t * 0.3) * 0.3;
 
+        // Smoothly lerp spreadFactor to eliminate sudden radial finger jumps
+        const targetSpread = 1.0 + (audio.bass * 0.8);
+        this.virtualHand.currentSpread += (targetSpread - this.virtualHand.currentSpread) * 0.1;
+        const spreadFactor = this.virtualHand.currentSpread;
+
         // Generate N finger positions dynamically based on autoPaintFingerCount
         const count = Math.max(1, this.autoPaintFingerCount || 3);
-        const spreadFactor = 1.0 + (audio.bass * 0.8);
         const baseOffsets = [];
 
         if (count === 1) {
