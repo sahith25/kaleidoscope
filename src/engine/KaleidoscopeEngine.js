@@ -210,23 +210,57 @@ export class KaleidoscopeEngine {
         const cy = srcH / 2;
         const t = this.time;
 
-        // Finger 1 (Bass Sweep): Large flowing Lissajous orbit
-        const r1 = (srcW * 0.20) + (audio.bass * 140);
-        const x1 = cx + Math.cos(t * 1.4) * r1 + Math.sin(t * 0.8) * 35;
-        const y1 = cy + Math.sin(t * 1.1) * r1 + Math.cos(t * 0.6) * 35;
-        this.mediaManager.drawingSource.moveStroke(x1, y1, 1);
+        // Initialize virtual hand state if not present
+        if (!this.virtualHand) {
+          this.virtualHand = {
+            x: cx,
+            y: cy,
+            angle: 0,
+            targetX: cx,
+            targetY: cy
+          };
+        }
 
-        // Finger 2 (Mid Range): Counter-rotating harmonic flower
-        const r2 = (srcW * 0.14) + (audio.mid * 100);
-        const x2 = cx + Math.cos(-t * 2.2 + 2.09) * r2;
-        const y2 = cy + Math.sin(t * 1.8 + 2.09) * r2;
-        this.mediaManager.drawingSource.moveStroke(x2, y2, 2);
+        // Smooth organic hand gliding trajectory across the canvas
+        const wanderRadius = srcW * 0.28;
+        const speedMult = 0.8 + (audio.mid * 1.5);
+        
+        this.virtualHand.targetX = cx + Math.cos(t * 0.7 * speedMult) * wanderRadius + Math.sin(t * 1.3) * (wanderRadius * 0.35);
+        this.virtualHand.targetY = cy + Math.sin(t * 0.9 * speedMult) * wanderRadius + Math.cos(t * 1.1) * (wanderRadius * 0.35);
+        
+        // Smooth lerp hand position
+        this.virtualHand.x += (this.virtualHand.targetX - this.virtualHand.x) * 0.08;
+        this.virtualHand.y += (this.virtualHand.targetY - this.virtualHand.y) * 0.08;
+        
+        // Hand orientation angle rotates gently as hand glides
+        this.virtualHand.angle = Math.sin(t * 0.5) * 0.7 + Math.cos(t * 0.3) * 0.3;
 
-        // Finger 3 (Treble Sparkler): Fast dancing orbital spiral
-        const r3 = (srcW * 0.26) + (audio.treble * 80);
-        const x3 = cx + Math.cos(t * 3.5 + 4.18) * r3 + Math.cos(t * 6.0) * (25 + audio.treble * 35);
-        const y3 = cy + Math.sin(-t * 2.9 + 4.18) * r3 + Math.sin(t * 6.0) * (25 + audio.treble * 35);
-        this.mediaManager.drawingSource.moveStroke(x3, y3, 3);
+        // 3 Fixed relative finger positions (Index, Middle, Ring fingers)
+        const spreadFactor = 1.0 + (audio.bass * 0.8); // Bass opens/closes hand finger spread
+        const baseOffsets = [
+          { x: -42 * spreadFactor, y: -12 * spreadFactor }, // Index Finger
+          { x: 0,                   y: -32 * spreadFactor }, // Middle Finger
+          { x: 42 * spreadFactor,  y: -12 * spreadFactor }  // Ring Finger
+        ];
+
+        baseOffsets.forEach((off, id) => {
+          // Treble adds subtle organic fingertip micro-jitter
+          const jitterX = Math.sin(t * 12 + id * 3) * (2 + audio.treble * 8);
+          const jitterY = Math.cos(t * 14 + id * 3) * (2 + audio.treble * 8);
+
+          // Rotate finger offset by hand orientation angle
+          const cosA = Math.cos(this.virtualHand.angle);
+          const sinA = Math.sin(this.virtualHand.angle);
+
+          const rx = off.x * cosA - off.y * sinA + jitterX;
+          const ry = off.x * sinA + off.y * cosA + jitterY;
+
+          // World position of fingertip
+          const fx = this.virtualHand.x + rx;
+          const fy = this.virtualHand.y + ry;
+
+          this.mediaManager.drawingSource.moveStroke(fx, fy, id + 1);
+        });
       }
 
       this.mediaManager.drawToCanvas(
