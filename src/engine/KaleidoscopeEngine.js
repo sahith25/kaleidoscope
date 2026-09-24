@@ -213,7 +213,7 @@ export class KaleidoscopeEngine {
         const cy = srcH / 2;
         const t = this.time;
 
-        // Initialize virtual hand state with accumulated continuous phase integration
+        // Initialize virtual hand state with accumulated continuous phase integration & organic noise seeds
         if (!this.virtualHand) {
           this.virtualHand = {
             x: cx,
@@ -224,7 +224,11 @@ export class KaleidoscopeEngine {
             phase1: 0,
             phase2: 0,
             phase3: 0,
-            currentSpread: 1.0
+            noiseP1: Math.random() * 100,
+            noiseP2: Math.random() * 100,
+            noiseP3: Math.random() * 100,
+            currentSpread: 1.0,
+            randomAngleOffset: 0
           };
         }
 
@@ -234,20 +238,36 @@ export class KaleidoscopeEngine {
         this.virtualHand.phase2 += dt * 1.3 * speedMult;
         this.virtualHand.phase3 += dt * 0.4 * speedMult;
 
+        // Organic low-frequency smooth noise drift
+        this.virtualHand.noiseP1 += dt * (0.2 + audio.bass * 0.5);
+        this.virtualHand.noiseP2 += dt * (0.15 + audio.treble * 0.6);
+        this.virtualHand.noiseP3 += dt * 0.3;
+
+        const noiseX = Math.sin(this.virtualHand.noiseP1) * Math.cos(this.virtualHand.noiseP2 * 0.7) * (srcW * 0.12);
+        const noiseY = Math.cos(this.virtualHand.noiseP2) * Math.sin(this.virtualHand.noiseP1 * 0.8) * (srcH * 0.12);
+
+        // Transient audio peak burst (subtle random angle shift on loud beat hits)
+        if (audio.bass > 0.65) {
+          this.virtualHand.randomAngleOffset += (Math.sin(this.time * 20) * 0.15 - this.virtualHand.randomAngleOffset) * 0.2;
+        } else {
+          this.virtualHand.randomAngleOffset *= 0.92;
+        }
+
         // Modulate radial distance dynamically (sweeps from 0% at center to 30% canvas width)
         const baseWander = srcW * 0.28;
         const radialFactor = Math.abs(Math.sin(this.virtualHand.phase3)); // 0.0 to 1.0
         const wanderRadius = baseWander * radialFactor;
 
-        this.virtualHand.targetX = cx + Math.cos(this.virtualHand.phase1) * wanderRadius + Math.sin(this.virtualHand.phase2) * (wanderRadius * 0.35);
-        this.virtualHand.targetY = cy + Math.sin(this.virtualHand.phase1 * 1.2) * wanderRadius + Math.cos(this.virtualHand.phase2 * 0.85) * (wanderRadius * 0.35);
+        this.virtualHand.targetX = cx + Math.cos(this.virtualHand.phase1) * wanderRadius + Math.sin(this.virtualHand.phase2) * (wanderRadius * 0.35) + noiseX;
+        this.virtualHand.targetY = cy + Math.sin(this.virtualHand.phase1 * 1.2) * wanderRadius + Math.cos(this.virtualHand.phase2 * 0.85) * (wanderRadius * 0.35) + noiseY;
         
         // Smooth lerp hand position
         this.virtualHand.x += (this.virtualHand.targetX - this.virtualHand.x) * 0.08;
         this.virtualHand.y += (this.virtualHand.targetY - this.virtualHand.y) * 0.08;
         
-        // Hand orientation angle rotates gently as hand glides
-        this.virtualHand.angle = Math.sin(t * 0.5) * 0.7 + Math.cos(t * 0.3) * 0.3;
+        // Hand orientation angle rotates gently with subtle organic randomness
+        const organicAngleNoise = Math.sin(this.virtualHand.noiseP3) * 0.3;
+        this.virtualHand.angle = Math.sin(t * 0.5) * 0.7 + Math.cos(t * 0.3) * 0.3 + organicAngleNoise + this.virtualHand.randomAngleOffset;
 
         // Smoothly lerp spreadFactor to eliminate sudden radial finger jumps
         const targetSpread = 1.0 + (audio.bass * 0.8);
